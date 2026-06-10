@@ -1,10 +1,10 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import { useAuth } from './hooks/useAuth';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
-import AppPage from './pages/AppPage';
+import { AuthProvider } from './context/AuthContext.tsx';
+import { useAuth } from './hooks/useAuth.ts';
+import LoginPage from './pages/LoginPage.tsx';
+import SignupPage from './pages/SignupPage.tsx';
+import AppPage from './pages/AppPage.tsx';
 
 // Component to protect routes requiring authentication
 const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, LogIn } from 'lucide-react';
-import Input from '../components/ui/Input';
-import Button from '../components/ui/Button';
-import { useAuth } from '../hooks/useAuth';
-import api from '../services/api';
+import Input from '../components/ui/Input.tsx';
+import Button from '../components/ui/Button.tsx';
+import { useAuth } from '../hooks/useAuth.ts';
+import api from '../services/api.ts';
 
 export const LoginPage = () => {
   const [email, setEmail] = useState('');
