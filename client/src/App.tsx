@@ -1,8 +1,9 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import LoginPage from "./pages/LoginPage";
 
-const LoginPage = () => {
+/*const LoginPage = () => {
   return <h1>Login Page</h1>;
-};
+};*/
 
 const SignupPage = () => {
   return <h1>Signup Page</h1>;
