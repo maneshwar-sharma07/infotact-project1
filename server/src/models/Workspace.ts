@@ -1,5 +1,5 @@
 import mongoose, {Schema,Document} from "mongoose";
-import {transformJSON} from "../utils/toJSON";
+import toJSON from "../utils/toJSON";
 
 
 export interface IWorkspace extends Document{
@@ -22,12 +22,15 @@ const workspaceSchema = new Schema<IWorkspace>(
             type:String,
             trim:true,
         },
-        owner:[
-            {
+        owner:{
             type:Schema.Types.ObjectId,
             ref:"User",
+            required:true
         },
-        ],
+        members:[{
+           type:Schema.Types.ObjectId,
+           ref:"User"
+        }],
         inviteToken:{
             type:String,
             unique:true,
@@ -36,11 +39,9 @@ const workspaceSchema = new Schema<IWorkspace>(
     },
     {
         timestamps:true,
-        toJSON:{
-            transform:transformJSON,
-        },
     }
 );
+toJSON(workspaceSchema);
 const Workspace = mongoose.model<IWorkspace>(
     "Workspace",
     workspaceSchema

@@ -1,5 +1,5 @@
 import mongoose, {Schema,Document} from "mongoose";
-import {transformJSON} from "../utils/toJSON";
+import toJSON from "../utils/toJSON";
 
 
 export interface IChannels extends Document{
@@ -30,12 +30,9 @@ const channelSchema = new Schema<IChannels>(
        },
        {
             timestamps:true,
-
-            toJSON:{
-                transform:transformJSON,
-            },
        }
 );
+toJSON(channelSchema);
 const Channels = mongoose.model<IChannels>(
     "Channels",
     channelSchema

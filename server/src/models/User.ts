@@ -1,11 +1,13 @@
-import {Schema,model,Document} from 'mongoose';
-import {transformJSON} from "../utils/toJSON";
+import mongoose, {Schema,model,Document} from 'mongoose';
+import toJSON from "../utils/toJSON";
 
 export interface IUser extends Document {
     name:string;
     email:string;
     passwordHash:string;
     avatarUrl?:string;
+    createdAt:Date;
+    updatedAt:Date;
 }
 
 const userSchema = new Schema<IUser>(
@@ -28,13 +30,15 @@ const userSchema = new Schema<IUser>(
         },
         avatarUrl:{
            type:String,
+           default:"",
         },
     },
     {
         timestamps:true,
     }
 );
+toJSON(userSchema);
 
-userSchema.set("toJSON",{
-    transform:transformJSON,
-})
+const User = mongoose.model<IUser>("User",userSchema);
+
+export default User;

@@ -1,5 +1,5 @@
 import mongoose, {Schema,Document} from "mongoose";
-import {transformJSON} from "../utils/toJSON";
+import toJSON from "../utils/toJSON";
 
 
 export interface IMessage extends Document{
@@ -31,12 +31,11 @@ const messageSchema = new Schema<IMessage>(
     },
     {
         timestamps:true,
-        toJSON:{
-            transform : transformJSON,
-        },
+       
     }
 );
 
+toJSON(messageSchema);
 const Message = mongoose.model<IMessage>(
     "Message",
     messageSchema
