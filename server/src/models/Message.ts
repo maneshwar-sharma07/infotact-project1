@@ -1,4 +1,6 @@
 import mongoose, {Schema,Document} from "mongoose";
+import {transformJSON} from "../utils/toJSON";
+
 
 export interface IMessage extends Document{
     content:string;
@@ -30,14 +32,7 @@ const messageSchema = new Schema<IMessage>(
     {
         timestamps:true,
         toJSON:{
-            transform : function(_doc,ret:Record<string,any>){
-                          ret.id = ret._id;
-
-                          delete ret._id;
-                          delete ret.__v;
-
-                          return ret;
-            },
+            transform : transformJSON,
         },
     }
 );

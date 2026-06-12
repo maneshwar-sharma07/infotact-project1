@@ -1,4 +1,6 @@
 import mongoose, {Schema,Document} from "mongoose";
+import {transformJSON} from "../utils/toJSON";
+
 
 export interface IWorkspace extends Document{
     name:string;
@@ -35,14 +37,7 @@ const workspaceSchema = new Schema<IWorkspace>(
     {
         timestamps:true,
         toJSON:{
-            transform:function(_doc,ret:Record<string,any>){
-                ret.id=ret._id;
-
-                delete ret._id;
-                delete ret.__v;
-
-                return ret;
-            },
+            transform:transformJSON,
         },
     }
 );

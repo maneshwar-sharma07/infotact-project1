@@ -1,4 +1,6 @@
 import {Schema,model,Document} from 'mongoose';
+import {transformJSON} from "../utils/toJSON";
+
 export interface IUser extends Document {
     name:string;
     email:string;
@@ -34,11 +36,5 @@ const userSchema = new Schema<IUser>(
 );
 
 userSchema.set("toJSON",{
-    transform:(_doc,ret:any)=>{
-        ret.id = ret._id;
-        delete ret._id;
-          delete ret.__v;
-          delete ret.passwordHash;
-          return ret
-    }
+    transform:transformJSON,
 })
