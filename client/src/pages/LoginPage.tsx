@@ -1,15 +1,31 @@
 import { useState } from "react";
+import api from "../services/api";
 
 function LoginPage() {
 const [email, setEmail] = useState("");
 const [password, setPassword] = useState("");
+const [isLoading, setIsLoading] = useState(false);
 
-const handleSubmit = (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
 e.preventDefault();
-console.log({
-  email,
-  password,
-});
+
+try {
+  setIsLoading(true);
+
+  const response = await api.post("/auth/login", {
+    email,
+    password,
+  });
+
+  localStorage.setItem("token", response.data.token);
+
+  console.log("Login Success", response.data);
+} catch (error) {
+  console.error("Login Failed", error);
+} finally {
+  setIsLoading(false);
+}
+
 };
 
 return (
@@ -54,8 +70,8 @@ border: "1px solid #7C3AED",
         />
       </div>
 
-      <button type="submit">
-        Login
+      <button type="submit" disabled={isLoading}>
+        {isLoading ? "Logging in..." : "Login"}
       </button>
     </form>
   </div>
