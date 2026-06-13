@@ -47,7 +47,9 @@ borderRadius: "16px",
 backgroundColor: "#111118",
 border: "1px solid #7C3AED",
 }}
-> <h1>Welcome Back</h1>
+> <h1 className="text-red-500 text-6xl font-bold">
+  Tailwind Test
+</h1>
 
     <form onSubmit={handleSubmit}>
       <div>
