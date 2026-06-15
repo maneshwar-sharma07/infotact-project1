@@ -1,6 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Geist+Mono:wght@100..900&family=Syne:wght@400..800&display=swap');
 @import "tailwindcss";
+
+:root {
+  --background-void: #0A0A0F;
+  --surface-card: #111118;
+  --accent-primary: #7C3AED;
+  --accent-secondary: #06B6D4;
+  --success-online: #10B981;
+  --text-primary: #F1F5F9;
+  --text-muted: #64748B;
+  --border-color: #1E293B;
+
+  --font-heading: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'Geist Mono', monospace;
+  
+  --radius-card: 8px;
+  --radius-input: 4px;
+  --radius-avatar: 50%;
+  
+  --focus-glow: 0 0 0 2px rgba(124, 58, 237, 0.4);
+}
+
+@theme {
+  --color-bg-void: var(--background-void);
+  --color-surface-card: var(--surface-card);
+  --color-accent-primary: var(--accent-primary);
+  --color-accent-secondary: var(--accent-secondary);
+  --color-success-online: var(--success-online);
+  --color-text-primary: var(--text-primary);
+  --color-text-muted: var(--text-muted);
+  --color-border-color: var(--border-color);
+
+  --font-heading: var(--font-heading);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+  
+  --radius-card: var(--radius-card);
+  --radius-input: var(--radius-input);
+  --radius-avatar: var(--radius-avatar);
+
+  --animate-fade-in: fade-in 0.2s ease-out;
+  --animate-scale-up: scale-up 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes scale-up {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
-  background: #0a0a0f;
+  padding: 0;
+  background-color: var(--background-void);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--text-primary);
+  margin-top: 0;
+}
+
+code, pre {
+  font-family: var(--font-mono);
+}
+
+/* Glassmorphism card utility */
+.glass-card {
+  background: rgba(17, 17, 24, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: var(--radius-card);
+}
+
+/* Custom focus glow utility */
+.input-glow {
+  transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.input-glow:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: var(--focus-glow);
 }
