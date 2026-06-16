@@ -7,11 +7,6 @@
     "strict": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "baseUrl": ".",
-    "ignoreDeprecations": "6.0",
-    "paths": {
-      "@/*": ["src/*"]
-    },
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
