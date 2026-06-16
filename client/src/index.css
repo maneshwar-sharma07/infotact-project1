@@ -1,111 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Geist+Mono:wght@100..900&family=Syne:wght@400..800&display=swap');
+@import "tailwindcss";
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  --background-void: #0A0A0F;
+  --surface-card: #111118;
+  --accent-primary: #7C3AED;
+  --accent-secondary: #06B6D4;
+  --success-online: #10B981;
+  --text-primary: #F1F5F9;
+  --text-muted: #64748B;
+  --border-color: #1E293B;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  --font-heading: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'Geist Mono', monospace;
+  
+  --radius-card: 8px;
+  --radius-input: 4px;
+  --radius-avatar: 50%;
+  
+  --focus-glow: 0 0 0 2px rgba(124, 58, 237, 0.4);
+}
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@theme {
+  --color-bg-void: var(--background-void);
+  --color-surface-card: var(--surface-card);
+  --color-accent-primary: var(--accent-primary);
+  --color-accent-secondary: var(--accent-secondary);
+  --color-success-online: var(--success-online);
+  --color-text-primary: var(--text-primary);
+  --color-text-muted: var(--text-muted);
+  --color-border-color: var(--border-color);
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
+  --font-heading: var(--font-heading);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+  
+  --radius-card: var(--radius-card);
+  --radius-input: var(--radius-input);
+  --radius-avatar: var(--radius-avatar);
+
+  --animate-fade-in: fade-in 0.2s ease-out;
+  --animate-scale-up: scale-up 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes scale-up {
+    from { transform: scale(0.95); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
+* {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  padding: 0;
+  background-color: var(--background-void);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--text-primary);
+  margin-top: 0;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
+code, pre {
+  font-family: var(--font-mono);
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+/* Glassmorphism card utility */
+.glass-card {
+  background: rgba(17, 17, 24, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: var(--radius-card);
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+/* Custom focus glow utility */
+.input-glow {
+  transition: box-shadow 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.input-glow:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: var(--focus-glow);
 }
