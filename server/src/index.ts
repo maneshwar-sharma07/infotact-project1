@@ -1,10 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
-import { Server as SocketServer } from 'socket.io';
 import dotenv from 'dotenv';
 import connectDB from './config/db';
 import { errorHandler } from './middleware/errorHandler';
+import { initSocket, io } from './socket/socketServer';
 
 // Import route handlers
 import authRouter from './routes/auth';
@@ -18,22 +18,8 @@ dotenv.config();
 const app = express();
 const httpServer = createServer(app);
 
-// Initialize Socket.IO with CORS settings
-const io = new SocketServer(httpServer, {
-  cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
-    methods: ['GET', 'POST'],
-  },
-});
-
-// Socket.IO connection handling placeholder (full implementation in Week 3)
-io.on('connection', (socket) => {
-  console.log(`Socket client connected: ${socket.id}`);
-  
-  socket.on('disconnect', () => {
-    console.log(`Socket client disconnected: ${socket.id}`);
-  });
-});
+// Initialize Socket.IO server
+initSocket(httpServer);
 
 // Establish connection to MongoDB
 connectDB();
