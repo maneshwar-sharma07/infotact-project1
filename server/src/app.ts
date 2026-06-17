@@ -1,5 +1,5 @@
 import express from 'express';
-import authRoutes from './routes/auth.routes';
+import authRoutes from './routes/auth';
 import workspaceRoutes from './routes/workspace.routes';
 const app =express();
 app.use(express.json());
