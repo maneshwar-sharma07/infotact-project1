@@ -34,6 +34,7 @@ export interface IMessage {
   channelId: string;
   content: string;
   timestamp: string;
+  senderName?: string;
 }
 
 export interface IAuthResponse {
