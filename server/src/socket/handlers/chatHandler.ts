@@ -1,5 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import Message from '../../models/Message';
+import User from '../../models/User';
 
 export default function chatHandler(io: Server, socket: Socket) {
   // Handle join channel room
@@ -29,6 +30,10 @@ export default function chatHandler(io: Server, socket: Socket) {
         return;
       }
 
+      // Query sender user to get name
+      const user = await User.findById(senderId);
+      const senderName = user ? user.name : 'User';
+
       // Save message to MongoDB using Message model
       const message = await Message.create({
         content,
@@ -42,6 +47,7 @@ export default function chatHandler(io: Server, socket: Socket) {
         channelId,
         content,
         senderId,
+        senderName,
         timestamp: message.createdAt.toISOString(),
       });
     } catch (error) {
