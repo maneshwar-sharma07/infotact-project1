@@ -27,7 +27,7 @@ export const SignupPage = () => {
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+      setError(" Passwords do not match.");
       return;
     }
 
