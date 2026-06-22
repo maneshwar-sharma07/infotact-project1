@@ -69,3 +69,48 @@ export const getWorkspaces = async (
         });
     }
 };
+
+export const joinWorkspaceByToken = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    try {
+        const { token } = req.params;
+
+        const workspace = await Workspace.findOne({
+            inviteToken: token,
+        });
+
+        if (!workspace) {
+            res.status(404).json({
+                success: false,
+                message: "Invalid invite token",
+            });
+            return;
+        }
+
+        const userId = req.user!.id;
+
+        const alreadyMember = workspace.members.some(
+            (member) => member.toString() === userId
+        );
+
+        if (!alreadyMember) {
+            workspace.members.push(userId as any);
+            await workspace.save();
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Joined workspace successfully",
+            data: workspace,
+        });
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+        });
+    }
+};
