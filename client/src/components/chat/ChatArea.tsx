@@ -32,7 +32,33 @@ export const ChatArea: React.FC = () => {
       setError(null);
       try {
         const response = await api.get(`/messages?channelId=${channelId}`);
-        setMessages(response.data as IMessage[]);
+        const rawData = response.data;
+        const rawMessages = Array.isArray(rawData) ? rawData : rawData?.data || [];
+        
+        // Map messages to clean client schema format
+        const formatted = rawMessages.map((msg: any) => {
+          const senderId = typeof msg.sender === 'object' 
+            ? msg.sender?.id || msg.sender?._id 
+            : msg.senderId || msg.sender;
+          
+          const senderName = typeof msg.sender === 'object' 
+            ? msg.sender?.name 
+            : msg.senderName || 'User';
+
+          return {
+            id: msg.id || msg._id || '',
+            senderId: senderId || '',
+            senderName: senderName || 'User',
+            channelId: msg.channel?.id || msg.channel?._id || msg.channelId || msg.channel || '',
+            content: msg.content,
+            timestamp: msg.createdAt || msg.timestamp || new Date().toISOString()
+          };
+        });
+
+        // Sort chronologically (oldest first)
+        formatted.sort((a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+        setMessages(formatted);
       } catch (err) {
         console.error('Failed to fetch messages:', err);
         setError('Failed to load messages.');
@@ -50,11 +76,30 @@ export const ChatArea: React.FC = () => {
 
     const handleNewMessage = (payload: any) => {
       const message = payload.message || payload;
-      if (message && message.channelId === channelId) {
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === message.id)) return prev;
-          return [...prev, message];
-        });
+      if (message) {
+        const senderId = typeof message.sender === 'object' 
+          ? message.sender?.id || message.sender?._id 
+          : message.senderId || message.sender;
+
+        const senderName = typeof message.sender === 'object' 
+          ? message.sender?.name 
+          : message.senderName || 'User';
+
+        const formatted: IMessage = {
+          id: message.id || message._id || '',
+          senderId: senderId || '',
+          senderName: senderName || 'User',
+          channelId: message.channel?.id || message.channel?._id || message.channelId || message.channel || '',
+          content: message.content,
+          timestamp: message.createdAt || message.timestamp || new Date().toISOString()
+        };
+
+        if (formatted.channelId === channelId) {
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === formatted.id)) return prev;
+            return [...prev, formatted];
+          });
+        }
       }
     };
 
