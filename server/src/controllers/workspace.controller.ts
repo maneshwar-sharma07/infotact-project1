@@ -53,7 +53,7 @@ export const getWorkspaces = async (
 
         const workspaces = await Workspace.find({
             members: userId,
-        });
+        }).populate('channels');
 
         res.status(200).json({
             success: true,
@@ -79,7 +79,7 @@ export const joinWorkspaceByToken = async (
 
         const workspace = await Workspace.findOne({
             inviteToken: token,
-        });
+        }).populate('channels');
 
         if (!workspace) {
             res.status(404).json({

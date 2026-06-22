@@ -23,12 +23,13 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const fetchWorkspaces = async () => {
     try {
       const response = await api.get('/workspaces');
-      const data = response.data as IWorkspace[];
-      setWorkspaces(data);
+      const rawData = response.data;
+      const workspacesList = Array.isArray(rawData) ? rawData : rawData?.data || [];
+      setWorkspaces(workspacesList);
       
       // If there's no active workspace, default to the first workspace loaded
-      if (!activeWorkspace && data.length > 0) {
-        setActiveWorkspace(data[0]!);
+      if (!activeWorkspace && workspacesList.length > 0) {
+        setActiveWorkspace(workspacesList[0]!);
       }
     } catch (error) {
       console.error('Failed to fetch workspaces:', error);
