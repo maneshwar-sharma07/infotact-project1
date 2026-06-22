@@ -1,27 +1,17 @@
-import { Request, Response, NextFunction } from 'express';
 
-export interface CustomError extends Error {
-  status?: number;
-  statusCode?: number;
-}
+import { Request, Response, NextFunction } from "express";
 
-/**
- * Global application error-handling middleware for Express.
- * Catches all thrown errors from route handlers and returns structured JSON response payloads.
- */
 export const errorHandler = (
-  err: CustomError,
+  err: any,
   req: Request,
   res: Response,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   next: NextFunction
-): void => {
-  console.error('Unhandled Server Error:', err);
+) => {
+  console.error(err);
 
-  const status = err.status || err.statusCode || 500;
-  const message = err.message || 'Internal server error';
-
-  res.status(status).json({
-    error: message,
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Internal Server Error",
   });
 };
+
