@@ -18,7 +18,7 @@ export const MessageInput: React.FC = () => {
 
   const handleStopTyping = () => {
     if (isTypingRef.current && channelId) {
-      socket.emit('typing:stop', { channelId });
+      socket.emit('typing:stop', { channelId, userName });
       isTypingRef.current = false;
     }
   };
@@ -83,10 +83,10 @@ export const MessageInput: React.FC = () => {
         clearTimeout(typingTimeoutRef.current);
       }
       if (isTypingRef.current && channelId) {
-        socket.emit('typing:stop', { channelId });
+        socket.emit('typing:stop', { channelId, userName });
       }
     };
-  }, [channelId]);
+  }, [channelId, userName]);
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2 p-4 bg-[#0F0F16] border-t border-[#1E1E2F]">

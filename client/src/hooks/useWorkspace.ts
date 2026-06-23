@@ -2,10 +2,6 @@ import { useWorkspaceContext } from '../context/WorkspaceContext.tsx';
 
 export const useWorkspace = () => {
   const context = useWorkspaceContext();
-  
-  if (!context) {
-    throw new Error('useWorkspace must be used within a WorkspaceProvider');
-  }
 
   return {
     activeWorkspace: context.activeWorkspace,

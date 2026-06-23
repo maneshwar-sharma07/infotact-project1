@@ -10,6 +10,8 @@ declare global {
         interface Request {
             user?: {
                 id: string;
+                role: string;
+                email: string;
             };
         }
     }
@@ -44,10 +46,12 @@ export const verifyToken = (
         const decoded = jwt.verify(
             token,
             process.env.JWT_SECRET!
-        ) as unknown as DecodedToken;
+        ) as any;
 
         req.user = {
             id: decoded.id,
+            role: decoded.role || '',
+            email: decoded.email || '',
         };
 
         next();

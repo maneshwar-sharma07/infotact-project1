@@ -26,7 +26,7 @@ export const WorkspaceSidebar: React.FC = () => {
             <div key={ws.id} className="relative group flex items-center justify-center w-full">
               {/* Active indicator bar */}
               <div 
-                className={`absolute left-0 w-1 bg-accent-primary rounded-r transition-all duration-350
+                className={`absolute left-0 w-1 bg-accent-primary rounded-r transition-all duration-300
                   ${isActive ? 'h-8' : 'h-2 scale-0 group-hover:scale-100 group-hover:h-5'}`}
               />
 

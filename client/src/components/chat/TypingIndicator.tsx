@@ -44,11 +44,6 @@ export const TypingIndicator: React.FC = () => {
           delete timeoutsRef.current[userName];
         }
         setTypers((prev) => prev.filter((name) => name !== userName));
-      } else {
-        // Clear all
-        Object.values(timeoutsRef.current).forEach(clearTimeout);
-        timeoutsRef.current = {};
-        setTypers([]);
       }
     };
 

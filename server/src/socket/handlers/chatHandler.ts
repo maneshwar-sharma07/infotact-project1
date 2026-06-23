@@ -22,11 +22,13 @@ export default function chatHandler(io: Server, socket: Socket) {
   });
 
   // Handle new incoming chat message
-  socket.on('chat:message', async (data: { channelId: string; content: string; senderId: string }) => {
+  socket.on('chat:message', async (data: { channelId: string; content: string }) => {
     try {
-      const { channelId, content, senderId } = data;
+      const { channelId, content } = data;
+      const senderId = socket.data.userId; // Secure server-derived identity
+      
       if (!channelId || !content || !senderId) {
-        console.warn('Invalid chat:message payload:', data);
+        console.warn('Invalid chat:message payload or unauthenticated socket:', data);
         return;
       }
 

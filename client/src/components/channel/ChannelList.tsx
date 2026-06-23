@@ -6,7 +6,9 @@ import type { IChannel } from '../../types/index.ts';
 export const ChannelList: React.FC = () => {
   const { activeWorkspace, activeChannel, setActiveChannel } = useWorkspace();
 
-  const channels = (activeWorkspace?.channels || []) as IChannel[];
+  const channels = ((activeWorkspace?.channels || []) as any[]).filter(
+    (chan) => chan && typeof chan === 'object' && 'name' in chan
+  ) as IChannel[];
 
   return (
     <div className="w-[240px] h-screen bg-[#0B0B0F] border-r border-[#1E1E2F] flex flex-col select-none">

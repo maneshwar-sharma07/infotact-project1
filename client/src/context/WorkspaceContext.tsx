@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import type { IWorkspace, IChannel } from '../types/index.ts';
 import api from '../services/api.ts';
 import { useAuth } from '../hooks/useAuth.ts';
@@ -20,6 +21,9 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [activeChannel, setActiveChannelState] = useState<IChannel | null>(null);
   const { isAuthenticated } = useAuth();
 
+  const { workspaceId, channelId } = useParams<{ workspaceId: string; channelId: string }>();
+  const navigate = useNavigate();
+
   const fetchWorkspaces = async () => {
     try {
       const response = await api.get('/workspaces');
@@ -27,9 +31,33 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const workspacesList = Array.isArray(rawData) ? rawData : rawData?.data || [];
       setWorkspaces(workspacesList);
       
-      // If there's no active workspace, default to the first workspace loaded
-      if (!activeWorkspace && workspacesList.length > 0) {
-        setActiveWorkspace(workspacesList[0]!);
+      if (workspacesList.length > 0) {
+        // Resolve target workspace matching URL param workspaceId
+        let targetWorkspace = workspacesList.find((w: any) => w.id === workspaceId);
+        if (!targetWorkspace) {
+          targetWorkspace = workspacesList[0];
+        }
+        
+        setActiveWorkspaceState(targetWorkspace);
+        
+        // Resolve target channel matching URL param channelId inside target workspace
+        const workspaceChannels = ((targetWorkspace?.channels || []) as any[]).filter(
+          (c) => c && typeof c === 'object' && 'name' in c
+        ) as IChannel[];
+        
+        let targetChannel = workspaceChannels.find((c: any) => c.id === channelId);
+        if (!targetChannel && workspaceChannels.length > 0) {
+          targetChannel = workspaceChannels[0];
+        }
+        
+        if (targetChannel) {
+          setActiveChannelState(targetChannel);
+        }
+        
+        // Redirect from placeholder 'default'/'general' paths to real IDs
+        if (targetWorkspace && targetChannel && (workspaceId === 'default' || channelId === 'general')) {
+          navigate(`/app/${targetWorkspace.id}/${targetChannel.id}`, { replace: true });
+        }
       }
     } catch (error) {
       console.error('Failed to fetch workspaces:', error);
@@ -39,21 +67,25 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const setActiveWorkspace = (workspace: IWorkspace) => {
     setActiveWorkspaceState(workspace);
     
-    // Auto-select the first channel of this workspace if available
-    if (workspace.channels && workspace.channels.length > 0) {
-      const firstChannel = workspace.channels[0];
-      if (firstChannel && typeof firstChannel === 'object') {
-        setActiveChannelState(firstChannel as IChannel);
-      } else {
-        setActiveChannelState(null);
-      }
+    const workspaceChannels = ((workspace?.channels || []) as any[]).filter(
+      (c) => c && typeof c === 'object' && 'name' in c
+    ) as IChannel[];
+
+    const firstChannel = workspaceChannels.length > 0 ? workspaceChannels[0] : null;
+    setActiveChannelState(firstChannel);
+    
+    if (firstChannel) {
+      navigate(`/app/${workspace.id}/${firstChannel.id}`);
     } else {
-      setActiveChannelState(null);
+      navigate(`/app/${workspace.id}/no-channel`);
     }
   };
 
   const setActiveChannel = (channel: IChannel) => {
     setActiveChannelState(channel);
+    if (activeWorkspace) {
+      navigate(`/app/${activeWorkspace.id}/${channel.id}`);
+    }
   };
 
   // On mount: fetch workspaces if authenticated
@@ -66,6 +98,32 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setActiveChannelState(null);
     }
   }, [isAuthenticated]);
+
+  // Sync state if URL changes (like browser back/forward buttons)
+  useEffect(() => {
+    if (workspaces.length === 0) return;
+
+    const matchedWorkspace = workspaces.find((w) => w.id === workspaceId);
+    if (matchedWorkspace && matchedWorkspace.id !== activeWorkspace?.id) {
+      setActiveWorkspaceState(matchedWorkspace);
+
+      const workspaceChannels = ((matchedWorkspace?.channels || []) as any[]).filter(
+        (c) => c && typeof c === 'object' && 'name' in c
+      ) as IChannel[];
+
+      const matchedChannel = workspaceChannels.find((c) => c.id === channelId) || workspaceChannels[0] || null;
+      setActiveChannelState(matchedChannel);
+    } else if (activeWorkspace) {
+      const workspaceChannels = ((activeWorkspace?.channels || []) as any[]).filter(
+        (c) => c && typeof c === 'object' && 'name' in c
+      ) as IChannel[];
+
+      const matchedChannel = workspaceChannels.find((c) => c.id === channelId);
+      if (matchedChannel && matchedChannel.id !== activeChannel?.id) {
+        setActiveChannelState(matchedChannel);
+      }
+    }
+  }, [workspaceId, channelId, workspaces]);
 
   return (
     <WorkspaceContext.Provider
