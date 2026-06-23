@@ -1,15 +1,15 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Message from '../models/Message';
 import Channels from '../models/Channels';
 import Workspace from '../models/Workspace';
-import { verifyToken } from '../middleware/auth';
+import { verifyToken } from '../middlewares/verifyToken';
 
 const router = Router();
 
 // Fetch messages for a specific channel
 // GET /api/messages?channelId=XYZ
-router.get('/', verifyToken, async (req: any, res: any) => {
+router.get('/', verifyToken, async (req: Request, res: Response) => {
   try {
     const channelId = req.query.channelId as string;
     if (!channelId) {
@@ -70,7 +70,7 @@ router.get('/', verifyToken, async (req: any, res: any) => {
 
 // Create a message in a specific channel
 // POST /api/messages
-router.post('/', verifyToken, async (req: any, res: any) => {
+router.post('/', verifyToken, async (req: Request, res: Response) => {
   try {
     const { content, channelId } = req.body;
     if (!content || !channelId) {

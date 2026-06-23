@@ -7,6 +7,7 @@ export interface IWorkspace extends Document{
     description?:string;
     owner:mongoose.Types.ObjectId;
     members:mongoose.Types.ObjectId[];
+    channels:mongoose.Types.ObjectId[];
     inviteToken?:string;
     createdAt:Date;
     updatedAt:Date;
@@ -30,6 +31,10 @@ const workspaceSchema = new Schema<IWorkspace>(
         members:[{
            type:Schema.Types.ObjectId,
            ref:"User"
+        }],
+        channels:[{
+            type:Schema.Types.ObjectId,
+            ref:"Channels"
         }],
         inviteToken:{
             type:String,

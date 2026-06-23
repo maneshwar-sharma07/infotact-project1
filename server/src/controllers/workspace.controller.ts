@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import Workspace from "../models/Workspace";
+import Channels from "../models/Channels";
 import crypto from "crypto";
 
 export const createWorkspace = async (
@@ -26,12 +27,26 @@ export const createWorkspace = async (
             owner: userId,
             inviteToken,
             members: [userId],
+            channels: [],
         });
+
+        // Create a default 'general' channel
+        const defaultChannel = await Channels.create({
+            name: "general",
+            workspace: workspace._id,
+            createdBy: userId,
+        });
+
+        workspace.channels.push(defaultChannel._id as any);
+        await workspace.save();
+
+        // Populate channels before sending response so frontend has it
+        const populatedWorkspace = await Workspace.findById(workspace._id).populate('channels');
 
         res.status(201).json({
             success: true,
             message: "Workspace created successfully",
-            data: workspace,
+            data: populatedWorkspace,
             inviteLink: `/api/workspaces/join/${inviteToken}`,
         });
     } catch (error) {
