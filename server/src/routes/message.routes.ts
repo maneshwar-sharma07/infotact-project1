@@ -4,7 +4,7 @@ import {
     getMessages,
 } from '../controllers/message.controller';
 
-import {verifyToken} from '../middlewares/verifyToken';
+import {verifyToken} from '../middleware/verifyToken';
 
 const router = Router();
 

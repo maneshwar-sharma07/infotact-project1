@@ -5,7 +5,7 @@ import {
     getChannels,
 } from '../controllers/channel.controller';
 
-import {verifyToken} from '../middlewares/verifyToken';
+import {verifyToken} from '../middleware/verifyToken';
 
 const router = Router();
 

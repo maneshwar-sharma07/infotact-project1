@@ -6,7 +6,7 @@ import{
     joinWorkspaceByToken,
 } from '../controllers/workspace.controller';
 
-import {verifyToken} from '../middlewares/verifyToken';
+import {verifyToken} from '../middleware/verifyToken';
 
 const router = Router();
 

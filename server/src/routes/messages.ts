@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import Message from '../models/Message';
 import Channels from '../models/Channels';
 import Workspace from '../models/Workspace';
-import { verifyToken } from '../middlewares/verifyToken';
+import { verifyToken } from '../middleware/verifyToken';
 
 const router = Router();
 
