@@ -1,4 +1,6 @@
 import {Router} from 'express';
+import {validate} from '../middleware/validate';
+import {createWorkspaceValidation} from '../validators/workspace.validator';
 
 import{
     createWorkspace,
@@ -11,7 +13,7 @@ import {verifyToken} from '../middleware/verifyToken';
 const router = Router();
 
 router.use(verifyToken);
-router.post("/",createWorkspace);
+router.post("/",createWorkspaceValidation,validate,createWorkspace);
 router.get("/",getWorkspaces);
 router.post("/join/:token",joinWorkspaceByToken);
 
