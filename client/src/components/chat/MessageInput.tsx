@@ -98,14 +98,14 @@ export const MessageInput: React.FC = () => {
         onBlur={handleBlur}
         placeholder={activeChannel ? `Message #${activeChannel.name}` : 'Select a channel to chat'}
         disabled={!activeChannel}
-        className="flex-1 bg-[#111118] text-[#F1F5F9] placeholder:text-[#64748B] text-sm border border-[#1E293B] rounded-[4px] py-2.5 px-3.5 focus:outline-none focus:border-[#7C3AED] focus:shadow-[0_0_0_2px_rgba(124,58,237,0.4)] transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed font-body"
+       className="flex-1 bg-[#111118] text-[#F1F5F9] placeholder:text-[#64748B] text-sm border border-[#1E293B] rounded-xl py-3 px-4 focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed font-body"
       />
       <Button
         type="submit"
         disabled={!content.trim() || !activeChannel}
         variant="primary"
         size="md"
-        className="flex items-center justify-center p-2.5"
+        className="flex items-center justify-center p-2.5 transition-all duration-200 hover:scale-105"
       >
         <Send size={16} />
       </Button>
