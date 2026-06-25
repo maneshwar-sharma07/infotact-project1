@@ -1,4 +1,6 @@
 import {Router} from 'express';
+import { validate } from '../middleware/validate';
+import { createChannelValidation } from '../validators/channel.validator';
 
 import {
     createChannel,
@@ -12,6 +14,6 @@ const router = Router();
 router.use(verifyToken);
 
 router.get("/",getChannels);
-router.post("/",createChannel);
+router.post("/",createChannelValidation, validate , createChannel);
 
 export default router;
