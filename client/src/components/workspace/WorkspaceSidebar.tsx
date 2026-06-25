@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useWorkspace } from '../../hooks/useWorkspace.ts';
 import { Settings, Plus } from 'lucide-react';
+import CreateWorkspaceModal from './CreateWorkspaceModal.tsx';
 
 export const WorkspaceSidebar: React.FC = () => {
   const { workspaces, activeWorkspace, setActiveWorkspace } = useWorkspace();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const getWorkspaceInitials = (name: string) => {
     return name
@@ -54,7 +56,7 @@ export const WorkspaceSidebar: React.FC = () => {
         <div className="relative group flex items-center justify-center w-full mt-1">
           <button
             className="w-12 h-12 rounded-[12px] bg-[#111118] border border-[#1E293B] hover:border-accent-primary/50 hover:bg-accent-primary/20 text-[#64748B] hover:text-white flex items-center justify-center transition-all duration-300 hover:rounded-[8px] cursor-pointer"
-            onClick={() => console.log('Create workspace clicked')}
+            onClick={() => setIsModalOpen(true)}
           >
             <Plus size={20} />
           </button>
@@ -77,6 +79,8 @@ export const WorkspaceSidebar: React.FC = () => {
         </div>
       </div>
     </div>
+
+    <CreateWorkspaceModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
   );
 };
 
