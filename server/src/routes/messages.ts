@@ -4,6 +4,8 @@ import Message from '../models/Message';
 import Channels from '../models/Channels';
 import Workspace from '../models/Workspace';
 import { verifyToken } from '../middleware/verifyToken';
+import { validate } from '../middleware/validate';
+import { createMessageValidation } from '../validators/message.validator';
 
 const router = Router();
 
@@ -70,7 +72,7 @@ router.get('/', verifyToken, async (req: Request, res: Response) => {
 
 // Create a message in a specific channel
 // POST /api/messages
-router.post('/', verifyToken, async (req: Request, res: Response) => {
+router.post('/', verifyToken, createMessageValidation , validate , async (req: Request, res: Response) => {
   try {
     const { content, channelId } = req.body;
     if (!content || !channelId) {
