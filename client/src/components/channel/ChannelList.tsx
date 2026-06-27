@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from "react";
+
 import { useWorkspace } from '../../hooks/useWorkspace.ts';
 import { Plus, Hash } from 'lucide-react';
 import type { IChannel } from '../../types/index.ts';
+import CreateChannelModal from "./CreateChannelModal";
 
 export const ChannelList: React.FC = () => {
+  const [openModal, setOpenModal] = useState(false);
   const { activeWorkspace, activeChannel, setActiveChannel } = useWorkspace();
 
   const channels = ((activeWorkspace?.channels || []) as any[]).filter(
@@ -25,7 +28,7 @@ export const ChannelList: React.FC = () => {
           <span className="text-[11px] font-body font-bold uppercase tracking-wider">Channels</span>
           <button
             className="p-1 hover:bg-white/5 rounded transition-all duration-200 cursor-pointer"
-            onClick={() => console.log('Add channel clicked')}
+            onClick={() => setOpenModal(true)}
             title="Create Channel"
           >
             <Plus size={14} />
@@ -58,6 +61,10 @@ export const ChannelList: React.FC = () => {
           )}
         </div>
       </div>
+      <CreateChannelModal
+  isOpen={openModal}
+  onClose={() => setOpenModal(false)}
+/>
     </div>
   );
 };
