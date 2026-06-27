@@ -3,50 +3,7 @@ import { Users, Loader2 } from 'lucide-react';
 import api from '../../services/api.ts';
 import { useWorkspace } from '../../hooks/useWorkspace.ts';
 import type { IUser } from '../../types/index.ts';
-
-/* ─── Sub-components ─────────────────────────────────────────────── */
-
-interface OnlineBadgeProps {
-  isOnline: boolean;
-}
-
-const OnlineBadge: React.FC<OnlineBadgeProps> = ({ isOnline }) => (
-  <span
-    className={`relative flex-shrink-0 w-2.5 h-2.5 rounded-full border-2 border-[#0F0F16] ${
-      isOnline ? 'bg-emerald-400' : 'bg-[#334155]'
-    }`}
-  >
-    {isOnline && (
-      <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-60" />
-    )}
-  </span>
-);
-
-interface UserAvatarProps {
-  name: string;
-  isOnline: boolean;
-}
-
-const UserAvatar: React.FC<UserAvatarProps> = ({ name, isOnline }) => {
-  const initials = name
-    .split(/\s+/)
-    .map((p) => p[0])
-    .join('')
-    .substring(0, 2)
-    .toUpperCase();
-
-  return (
-    <div className="relative flex-shrink-0">
-      <div className="w-8 h-8 rounded-full bg-[#7C3AED] flex items-center justify-center text-white text-xs font-semibold font-heading select-none">
-        {initials}
-      </div>
-      {/* Badge positioned bottom-right of avatar */}
-      <span className="absolute -bottom-0.5 -right-0.5">
-        <OnlineBadge isOnline={isOnline} />
-      </span>
-    </div>
-  );
-};
+import UserAvatar from './UserAvatar.tsx';
 
 /* ─── MembersList ─────────────────────────────────────────────────── */
 
@@ -153,7 +110,7 @@ const MembersList: React.FC = () => {
 
 const MemberRow: React.FC<{ member: IUser }> = ({ member }) => (
   <div className="flex items-center gap-2.5 px-4 py-1.5 hover:bg-[#111118] rounded-md mx-1 transition-colors duration-150 cursor-default group">
-    <UserAvatar name={member.name} isOnline={member.isOnline} />
+    <UserAvatar name={member.name} isOnline={member.isOnline} size="sm" />
     <div className="flex flex-col min-w-0">
       <span className="text-sm text-[#CBD5E1] font-body truncate group-hover:text-[#F1F5F9] transition-colors">
         {member.name}

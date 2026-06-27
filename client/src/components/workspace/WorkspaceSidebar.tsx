@@ -17,7 +17,8 @@ export const WorkspaceSidebar: React.FC = () => {
   };
 
   return (
-    <div className="w-[72px] h-screen bg-[#07070A] border-r border-[#1E1E2F] flex flex-col items-center py-4 justify-between select-none">
+    <>
+      <div className="w-[72px] h-screen bg-[#07070A] border-r border-[#1E1E2F] flex flex-col items-center py-4 justify-between select-none">
       {/* Workspaces List Container */}
       <div className="flex flex-col items-center gap-3 w-full overflow-y-auto scrollbar-none">
         {workspaces.map((ws) => {
@@ -78,9 +79,10 @@ export const WorkspaceSidebar: React.FC = () => {
           Settings
         </div>
       </div>
-    </div>
+      </div>
 
-    <CreateWorkspaceModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <CreateWorkspaceModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+    </>
   );
 };
 
