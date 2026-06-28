@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Settings, Plus } from 'lucide-react';
 import { useWorkspace } from '../../hooks/useWorkspace.ts';
 import CreateWorkspaceModal from "./CreateWorkspaceModal";
-import React from 'react';
+import UserProfileDropdown from "../user/UserProfileDropdown";
 export const WorkspaceSidebar: React.FC = () => {
   const [openModal, setOpenModal] = useState(false);
   const { workspaces, activeWorkspace, setActiveWorkspace } = useWorkspace();
@@ -78,6 +78,9 @@ export const WorkspaceSidebar: React.FC = () => {
           Settings
         </div>
       </div>
+    <div className="mb-2">
+      <UserProfileDropdown />
+    </div>
       <CreateWorkspaceModal
     isOpen={openModal}
     onClose={() => setOpenModal(false)}
