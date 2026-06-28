@@ -2,6 +2,7 @@ import React from 'react';
 import { useWorkspace } from '../../hooks/useWorkspace.ts';
 import { Plus, Hash } from 'lucide-react';
 import type { IChannel } from '../../types/index.ts';
+import WorkspaceHeader from '../workspace/WorkspaceHeader.tsx';
 
 export const ChannelList: React.FC = () => {
   const { activeWorkspace, activeChannel, setActiveChannel } = useWorkspace();
@@ -13,11 +14,7 @@ export const ChannelList: React.FC = () => {
   return (
     <div className="w-[240px] h-screen bg-[#0B0B0F] border-r border-[#1E1E2F] flex flex-col select-none">
       {/* Workspace Header */}
-      <div className="h-14 border-b border-[#1E1E2F] flex items-center justify-between px-4">
-        <h2 className="text-sm font-heading font-bold text-[#F1F5F9] truncate" title={activeWorkspace?.name}>
-          {activeWorkspace ? activeWorkspace.name : 'No Workspace'}
-        </h2>
-      </div>
+      <WorkspaceHeader />
 
       {/* Channels Section */}
       <div className="flex-1 overflow-y-auto px-2 py-4 scrollbar-thin scrollbar-thumb-white/5 scrollbar-track-transparent">
