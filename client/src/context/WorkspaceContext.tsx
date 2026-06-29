@@ -11,6 +11,7 @@ export interface WorkspaceContextType {
   setActiveWorkspace: (workspace: IWorkspace) => void;
   setActiveChannel: (channel: IChannel) => void;
   fetchWorkspaces: () => Promise<void>;
+  updateWorkspace: (workspace: IWorkspace) => void;
 }
 
 export const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
@@ -88,6 +89,16 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
+  const updateWorkspace = (updatedWorkspace: IWorkspace) => {
+  setWorkspaces((prev) =>
+    prev.map((ws) =>
+      ws.id === updatedWorkspace.id ? updatedWorkspace : ws
+    )
+  );
+
+  setActiveWorkspaceState(updatedWorkspace);
+};
+
   // On mount: fetch workspaces if authenticated
   useEffect(() => {
     if (isAuthenticated) {
@@ -127,14 +138,15 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   return (
     <WorkspaceContext.Provider
-      value={{
-        activeWorkspace,
-        activeChannel,
-        workspaces,
-        setActiveWorkspace,
-        setActiveChannel,
-        fetchWorkspaces,
-      }}
+    value={{
+      activeWorkspace,
+      activeChannel,
+      workspaces,
+      setActiveWorkspace,
+      setActiveChannel,
+      fetchWorkspaces,
+      updateWorkspace,
+    }}
     >
       {children}
     </WorkspaceContext.Provider>
