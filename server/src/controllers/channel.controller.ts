@@ -38,8 +38,22 @@ export const createChannel = async (
       return;
     }
 
+   const formattedName = name.toLowerCase().trim().replace(/\s+/g, '-'); // Clean name format
+   const existingChannel = await Channels.findOne({
+    workspace: workspaceId,
+    name: formattedName,
+    });
+
+    if (existingChannel) {
+      res.status(409).json({
+        success: false,
+        message: 'Channel with this name already exists in the workspace',
+      });
+      return;
+    }
+
     const channel = await Channels.create({
-      name: name.toLowerCase().replace(/\s+/g, '-'), // Clean name format
+      name: formattedName,
       workspace: workspaceId,
       createdBy: userId,
     });
