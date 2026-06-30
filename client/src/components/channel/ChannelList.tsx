@@ -30,7 +30,7 @@ export const ChannelList: React.FC = () => {
 
       {/* Channels Section */}
       <div className="flex-1 overflow-y-auto px-2 py-4 scrollbar-thin scrollbar-thumb-white/5 scrollbar-track-transparent">
-      <div className="relative px-2 mb-3">
+      <div className="relative px-2 mb-2">
 
   <Search
     size={16}
@@ -42,7 +42,22 @@ export const ChannelList: React.FC = () => {
     placeholder="Search..."
     value={search}
     onChange={(e) => setSearch(e.target.value)}
-    className="w-full bg-[#111118] border border-[#1E293B] rounded-lg pl-10 pr-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-violet-500"
+   className="
+w-full
+bg-[#111118]
+border border-[#1E293B]
+rounded-lg
+pl-10
+pr-3
+py-2
+text-sm
+text-white
+placeholder:text-gray-500
+focus:outline-none
+focus:border-[#7C3AED]
+transition-all
+duration-200
+"
   />
 
 </div>
