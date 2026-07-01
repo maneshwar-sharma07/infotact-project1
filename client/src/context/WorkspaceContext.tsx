@@ -24,46 +24,57 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const { workspaceId, channelId } = useParams<{ workspaceId: string; channelId: string }>();
   const navigate = useNavigate();
-
+  
   const fetchWorkspaces = async () => {
-    try {
-      const response = await api.get('/workspaces');
-      const rawData = response.data;
-      const workspacesList = Array.isArray(rawData) ? rawData : rawData?.data || [];
-      setWorkspaces(workspacesList);
-      
-      if (workspacesList.length > 0) {
-        // Resolve target workspace matching URL param workspaceId
-        let targetWorkspace = workspacesList.find((w: any) => w.id === workspaceId);
-        if (!targetWorkspace) {
-          targetWorkspace = workspacesList[0];
-        }
-        
-        setActiveWorkspaceState(targetWorkspace);
-        
-        // Resolve target channel matching URL param channelId inside target workspace
-        const workspaceChannels = ((targetWorkspace?.channels || []) as any[]).filter(
-          (c) => c && typeof c === 'object' && 'name' in c
-        ) as IChannel[];
-        
-        let targetChannel = workspaceChannels.find((c: any) => c.id === channelId);
-        if (!targetChannel && workspaceChannels.length > 0) {
-          targetChannel = workspaceChannels[0];
-        }
-        
-        if (targetChannel) {
-          setActiveChannelState(targetChannel);
-        }
-        
-        // Redirect from placeholder 'default'/'general' paths to real IDs
-        if (targetWorkspace && targetChannel && (workspaceId === 'default' || channelId === 'general')) {
-          navigate(`/app/${targetWorkspace.id}/${targetChannel.id}`, { replace: true });
-        }
+  try {
+    console.log("Token:", localStorage.getItem("token"));
+
+    const response = await api.get("/workspaces");
+
+    console.log("Workspace Response:", response.data);
+
+    const rawData = response.data;
+    const workspacesList = Array.isArray(rawData)
+      ? rawData
+      : rawData?.data || [];
+
+    setWorkspaces(workspacesList);
+
+    if (workspacesList.length > 0) {
+      let targetWorkspace =
+        workspacesList.find((w: any) => w.id === workspaceId) ||
+        workspacesList[0];
+
+      setActiveWorkspaceState(targetWorkspace);
+
+      const workspaceChannels = (
+        (targetWorkspace?.channels || []) as any[]
+      ).filter(
+        (c) => c && typeof c === "object" && "name" in c
+      ) as IChannel[];
+
+      let targetChannel =
+        workspaceChannels.find((c: any) => c.id === channelId) ||
+        workspaceChannels[0];
+
+      if (targetChannel) {
+        setActiveChannelState(targetChannel);
       }
-    } catch (error) {
-      console.error('Failed to fetch workspaces:', error);
+
+      if (
+        targetWorkspace &&
+        targetChannel &&
+        (workspaceId === "default" || channelId === "general")
+      ) {
+        navigate(`/app/${targetWorkspace.id}/${targetChannel.id}`, {
+          replace: true,
+        });
+      }
     }
-  };
+  } catch (error) {
+    console.error("Failed to fetch workspaces:", error);
+  }
+};
 
   const setActiveWorkspace = (workspace: IWorkspace) => {
     setActiveWorkspaceState(workspace);
@@ -88,7 +99,6 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       navigate(`/app/${activeWorkspace.id}/${channel.id}`);
     }
   };
-
   const updateWorkspace = (updatedWorkspace: IWorkspace) => {
   setWorkspaces((prev) =>
     prev.map((ws) =>
