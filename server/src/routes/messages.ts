@@ -72,8 +72,8 @@ router.get('/', verifyToken, async (req: Request, res: Response) => {
       data: formattedMessages,
       page,
       limit,
-      total: totalMessages,
-      pages: Math.ceil(totalMessages / limit),
+      totalMessages: totalMessages,
+      totalPages: Math.ceil(totalMessages / limit),
     });
   } catch (error) {
     console.error('Error in GET /messages:', error);

@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import Channels from '../models/Channels';
 import Workspace from '../models/Workspace';
+import formatChannelName from '../utils/formatChannelName';
+import { format } from 'path/win32';
 
 export const createChannel = async (
   req: Request,
@@ -38,7 +40,7 @@ export const createChannel = async (
       return;
     }
 
-   const formattedName = name.toLowerCase().trim().replace(/\s+/g, '-'); // Clean name format
+   const formattedName = formatChannelName(name); // Clean name format
    const existingChannel = await Channels.findOne({
     workspace: workspaceId,
     name: formattedName,
