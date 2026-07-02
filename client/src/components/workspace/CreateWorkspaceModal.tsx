@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
+import api from "../../services/api.ts";
+import { useWorkspace } from "../../hooks/useWorkspace.ts";
 
 interface Props {
   isOpen: boolean;
@@ -10,21 +12,42 @@ const CreateWorkspaceModal: React.FC<Props> = ({
   isOpen,
   onClose,
 }) => {
+  const { fetchWorkspaces } = useWorkspace();
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   if (!isOpen) return null;
 
-  const handleCreate = () => {
-    console.log({
-      name,
-      description,
-    });
+  const handleCreate = async () => {
+    if (!name.trim()) {
+      setError("Workspace name is required");
+      return;
+    }
 
-    setName("");
-    setDescription("");
+    try {
+      setLoading(true);
+      setError("");
 
-    onClose();
+      await api.post("/workspaces", {
+        name: name.trim(),
+        description: description.trim(),
+      });
+
+      await fetchWorkspaces();
+
+      setName("");
+      setDescription("");
+
+      onClose();
+    } catch (err) {
+      console.error(err);
+      setError("Failed to create workspace");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -33,7 +56,6 @@ const CreateWorkspaceModal: React.FC<Props> = ({
       <div className="w-[450px] rounded-2xl bg-[#111118] border border-[#1E293B] shadow-2xl">
 
         {/* Header */}
-
         <div className="flex items-center justify-between p-5 border-b border-[#1E293B]">
 
           <h2 className="text-xl font-bold text-white">
@@ -50,7 +72,6 @@ const CreateWorkspaceModal: React.FC<Props> = ({
         </div>
 
         {/* Body */}
-
         <div className="p-5 space-y-4">
 
           <div>
@@ -85,10 +106,15 @@ const CreateWorkspaceModal: React.FC<Props> = ({
 
           </div>
 
+          {error && (
+            <p className="text-red-500 text-sm">
+              {error}
+            </p>
+          )}
+
         </div>
 
         {/* Footer */}
-
         <div className="flex justify-end gap-3 p-5 border-t border-[#1E293B]">
 
           <button
@@ -100,9 +126,10 @@ const CreateWorkspaceModal: React.FC<Props> = ({
 
           <button
             onClick={handleCreate}
-            className="px-5 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 text-white"
+            disabled={loading}
+            className="px-5 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white"
           >
-            Create
+            {loading ? "Creating..." : "Create"}
           </button>
 
         </div>
