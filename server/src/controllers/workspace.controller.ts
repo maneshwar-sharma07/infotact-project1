@@ -84,10 +84,16 @@ export const getWorkspaces = async (
             members: userId,
         }).populate('channels');
 
+        const formattedWorkspaces = workspaces.map((workspace:any) => ({
+             ...workspace.toObject(),
+             memberCount : workspace.members.length,
+             channelCount : workspace.channels.length,
+        }));
+
         res.status(200).json({
             success: true,
             count: workspaces.length,
-            data: workspaces,
+            data: formattedWorkspaces,
         });
     } catch (error) {
         console.error("Get Workspaces Error:", error);
