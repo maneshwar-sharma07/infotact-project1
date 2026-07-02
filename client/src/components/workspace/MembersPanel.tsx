@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
+import { Plus } from "lucide-react";
+import InviteMemberModal from "./InviteMemberModal";
 
 const members = [
   {
@@ -22,12 +24,24 @@ const members = [
 ];
 
 const MembersPanel: React.FC = () => {
+  const [openInvite, setOpenInvite] = useState(false);
   return (
     <div className="w-[220px] h-screen bg-[#07070A] border-l border-[#1E1E2F] flex flex-col p-4">
-      <h3 className="text-xs font-bold uppercase tracking-wider text-[#64748B] mb-4">
-        MEMBERS
-      </h3>
+      <div className="flex items-center justify-between mb-4">
 
+        <h3 className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
+          MEMBERS
+        </h3>
+
+        <button
+          onClick={() => setOpenInvite(true)}
+          className="p-1 rounded hover:bg-[#181820] transition"
+          title="Invite Member"
+        >
+          <Plus size={16} className="text-[#64748B]" />
+        </button>
+
+      </div>
       <div className="space-y-3 flex-1">
         {members.map((member) => (
           <div
@@ -64,6 +78,11 @@ const MembersPanel: React.FC = () => {
       <div className="border-t border-[#1E1E2F] pt-3 text-center text-xs text-gray-500">
         {members.length} Members
       </div>
+
+      <InviteMemberModal
+      isOpen={openInvite}
+      onClose={() => setOpenInvite(false)}
+    />
     </div>
   );
 };
