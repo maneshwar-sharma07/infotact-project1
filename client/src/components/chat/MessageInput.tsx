@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth.ts';
 import { socket } from '../../services/socket.ts';
 import Button from '../ui/Button.tsx';
 import FileAttachmentButton from "./FileAttachmentButton";
+import EmojiPickerButton from "./EmojiPickerButton";
 import { Send } from 'lucide-react';
 
 export const MessageInput: React.FC = () => {
@@ -57,6 +58,10 @@ export const MessageInput: React.FC = () => {
     handleStopTyping();
   };
 
+  const addEmoji = (emoji: string) => {
+  setContent((prev) => prev + emoji);
+};
+
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!content.trim() || !channelId || !senderId) return;
@@ -93,6 +98,9 @@ export const MessageInput: React.FC = () => {
     <form onSubmit={handleSubmit} className="flex items-center gap-2 p-4 bg-[#0F0F16] border-t border-[#1E1E2F]">
       
     <FileAttachmentButton />
+      <EmojiPickerButton
+      onSelect={addEmoji}
+    />
       <input
         type="text"
         value={content}
