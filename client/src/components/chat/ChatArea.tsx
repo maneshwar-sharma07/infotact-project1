@@ -15,6 +15,40 @@ export const ChatArea: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const handleEdit = async (id: string) => {
+  const content = prompt("Edit message");
+
+  if (!content) return;
+
+  try {
+    await api.patch(`/messages/${id}`, { content });
+
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === id ? { ...msg, content } : msg
+      )
+    );
+  } catch (err) {
+    console.error("Edit failed:", err);
+  }
+};
+
+const handleDelete = async (id: string) => {
+  const confirmed = window.confirm("Delete this message?");
+
+  if (!confirmed) return;
+
+  try {
+    await api.delete(`/messages/${id}`);
+
+    setMessages((prev) =>
+      prev.filter((msg) => msg.id !== id)
+    );
+  } catch (err) {
+    console.error("Delete failed:", err);
+  }
+};
+
   const channelId = activeChannel?.id;
 
   // Establish connection and events subscription for this channel
@@ -144,7 +178,11 @@ if (!activeChannel) {
           {error}
         </div>
       ) : (
-        <MessageList messages={messages} />
+        <MessageList
+        messages={messages}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
       )}
 
       {/* Typing Indicator */}

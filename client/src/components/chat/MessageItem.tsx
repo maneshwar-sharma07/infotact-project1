@@ -5,6 +5,8 @@ import MessageActions from "./MessageActions";
 interface MessageItemProps {
   message: IMessage;
   isOwn: boolean;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
 const getInitials = (name?: string) => {
@@ -24,7 +26,12 @@ const formatTime = (isoString: string) => {
   }
 };
 
-export const MessageItem: React.FC<MessageItemProps> = ({ message, isOwn }) => {
+export const MessageItem: React.FC<MessageItemProps> = ({
+  message,
+  isOwn,
+  onEdit,
+  onDelete,
+}) => {
   const displayName = message.senderName || 'User';
   const initials = getInitials(displayName);
   const timeStr = formatTime(message.timestamp);
@@ -40,7 +47,13 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, isOwn }) => {
     <div className={`relative flex flex-col max-w-[70%] ${isOwn ? 'items-end' : 'items-start'}`}>
 
       {/* Message Actions */}
-      <MessageActions />
+{isOwn && (
+  <MessageActions
+    content={message.content}
+    onEdit={() => onEdit(message.id)}
+    onDelete={() => onDelete(message.id)}
+  />
+)}
 
       {/* Sender Name */}
       <span className="text-xs font-medium text-text-muted mb-1 font-heading">
