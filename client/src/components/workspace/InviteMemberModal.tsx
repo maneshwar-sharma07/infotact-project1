@@ -38,7 +38,7 @@ const InviteMemberModal: React.FC<Props> = ({
 
       const data = response.data;
 
-      const fullLink = `${window.location.origin}${data.inviteLink}`;
+      const fullLink = `http://localhost:5000${data.inviteLink}`;
 
       setInviteLink(fullLink);
     } catch (err) {
