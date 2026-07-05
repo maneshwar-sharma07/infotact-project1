@@ -3,7 +3,9 @@ import mongoose from 'mongoose';
 import Message from '../models/Message';
 import Channels from '../models/Channels';
 import Workspace from '../models/Workspace';
-import { verifyToken } from '../middlewares/verifyToken';
+import { verifyToken } from '../middleware/verifyToken';
+import { validate } from '../middleware/validate';
+import { createMessageValidation } from '../validators/message.validator';
 
 const router = Router();
 
@@ -12,6 +14,9 @@ const router = Router();
 router.get('/', verifyToken, async (req: Request, res: Response) => {
   try {
     const channelId = req.query.channelId as string;
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10; // Default limit of 10 messages per page
+    const skip = (page - 1) * limit;
     if (!channelId) {
       res.status(400).json({ success: false, error: 'channelId is required' });
       return;
@@ -47,7 +52,11 @@ router.get('/', verifyToken, async (req: Request, res: Response) => {
     // 4. Retrieve messages
     const messages = await Message.find({ channel: channelId })
       .populate('sender', 'name email')
-      .sort({ createdAt: 1 });
+      .sort({ createdAt: 1 })
+      .skip(skip)
+      .limit(limit);
+
+      const totalMessages = await Message.countDocuments({ channel: channelId });
 
     const formattedMessages = messages.map((msg: any) => ({
       id: msg._id.toString(),
@@ -61,6 +70,10 @@ router.get('/', verifyToken, async (req: Request, res: Response) => {
     res.status(200).json({
       success: true,
       data: formattedMessages,
+      page,
+      limit,
+      totalMessages: totalMessages,
+      totalPages: Math.ceil(totalMessages / limit),
     });
   } catch (error) {
     console.error('Error in GET /messages:', error);
@@ -70,7 +83,7 @@ router.get('/', verifyToken, async (req: Request, res: Response) => {
 
 // Create a message in a specific channel
 // POST /api/messages
-router.post('/', verifyToken, async (req: Request, res: Response) => {
+router.post('/', verifyToken, createMessageValidation , validate , async (req: Request, res: Response) => {
   try {
     const { content, channelId } = req.body;
     if (!content || !channelId) {
