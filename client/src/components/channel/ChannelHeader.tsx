@@ -1,5 +1,6 @@
 import React from 'react';
 import { useWorkspace } from '../../hooks/useWorkspace.ts';
+import NotificationDropdown from "../user/NotificationDropdown";
 import { Users, Search, Hash } from 'lucide-react';
 
 export const ChannelHeader: React.FC = () => {
@@ -30,15 +31,19 @@ export const ChannelHeader: React.FC = () => {
         )}
       </div>
 
-      {/* Search Bar / Placeholder Icon */}
-      <div className="flex items-center">
+      {/* Right Side Actions */}
+      <div className="flex items-center gap-2">
+
         <button
           className="p-2 hover:bg-white/5 rounded-full text-[#64748B] hover:text-[#F1F5F9] transition-all duration-200 cursor-pointer"
-          onClick={() => console.log('Search clicked')}
+          onClick={() => console.log("Search clicked")}
           title="Search"
         >
           <Search size={16} />
         </button>
+
+        <NotificationDropdown />
+
       </div>
     </div>
   );

@@ -11,7 +11,8 @@ export const register = async (req:Request,res:Response):Promise<void> => {
             res.status(400).json({
                 success:false,
                 message:"Name, email and password are required"});
-            return;}
+            return;
+        }
             const existingUser = await User.findOne({
                 email:email.toLowerCase(),
             });

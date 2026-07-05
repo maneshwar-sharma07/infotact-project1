@@ -3,7 +3,15 @@ import { useWorkspace } from '../../hooks/useWorkspace.ts';
 import { Settings, Plus } from 'lucide-react';
 import CreateWorkspaceModal from './CreateWorkspaceModal.tsx';
 
+import { useState } from "react";
+import { Settings, Plus } from 'lucide-react';
+import { useWorkspace } from '../../hooks/useWorkspace.ts';
+import CreateWorkspaceModal from "./CreateWorkspaceModal";
+import UserProfileDropdown from "../user/UserProfileDropdown";
+import WorkspaceSettingsModal from "./WorkspaceSettingsModal";
 export const WorkspaceSidebar: React.FC = () => {
+  const [openModal, setOpenModal] = useState(false);
+  const [openSettings, setOpenSettings] = useState(false);
   const { workspaces, activeWorkspace, setActiveWorkspace } = useWorkspace();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -70,8 +78,8 @@ export const WorkspaceSidebar: React.FC = () => {
       {/* Settings at the Bottom */}
       <div className="relative group flex items-center justify-center w-full">
         <button
-          className="w-12 h-12 rounded-[12px] bg-[#111118] border border-[#1E293B] hover:border-accent-primary/50 hover:bg-accent-primary/20 text-[#64748B] hover:text-white flex items-center justify-center transition-all duration-300 hover:rounded-[8px] cursor-pointer"
-          onClick={() => console.log('Settings clicked')}
+          className="w-12 h-12 rounded-[12px] bg-[#111118] border border-[#1E293B] hover:border-accent-primary hover:bg-accent-primary/20 text-[#64748B] hover:text-white flex items-center justify-center transition-all duration-300 hover:rounded-[8px] hover:scale-105 active:scale-95 shadow-sm hover:shadow-[0_0_12px_rgba(124,58,237,0.35)] cursor-pointer"
+          onClick={() => setOpenSettings(true)}
         >
           <Settings size={20} />
         </button>
@@ -83,6 +91,20 @@ export const WorkspaceSidebar: React.FC = () => {
 
       <CreateWorkspaceModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </>
+    <div className="mb-2">
+      <UserProfileDropdown />
+    </div>
+      <CreateWorkspaceModal
+    isOpen={openModal}
+    onClose={() => setOpenModal(false)}
+  />
+
+  <WorkspaceSettingsModal
+    isOpen={openSettings}
+    onClose={() => setOpenSettings(false)}
+/>
+
+    </div>
   );
 };
 
