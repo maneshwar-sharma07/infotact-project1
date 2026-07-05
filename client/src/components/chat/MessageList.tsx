@@ -5,9 +5,15 @@ import { useAuth } from '../../hooks/useAuth.ts';
 
 interface MessageListProps {
   messages: IMessage[];
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-export const MessageList: React.FC<MessageListProps> = ({ messages }) => {
+export const MessageList: React.FC<MessageListProps> = ({
+  messages,
+  onEdit,
+  onDelete,
+}) => {
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -31,11 +37,13 @@ export const MessageList: React.FC<MessageListProps> = ({ messages }) => {
     <div className="flex-1 overflow-y-auto py-4 scrollbar-thin scrollbar-thumb-white/5 scrollbar-track-transparent">
       <div className="flex flex-col">
         {messages.map((msg) => (
-          <MessageItem
-            key={msg.id || `${msg.senderId}-${msg.timestamp}`}
-            message={msg}
-            isOwn={msg.senderId === user?.id}
-          />
+              <MessageItem
+                  key={msg.id || `${msg.senderId}-${msg.timestamp}`}
+                  message={msg}
+                  isOwn={msg.senderId === user?.id}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+              />
         ))}
         <div ref={messagesEndRef} />
       </div>

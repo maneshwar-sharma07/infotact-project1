@@ -1,9 +1,12 @@
 import React from 'react';
 import type { IMessage } from '../../types/index.ts';
+import MessageActions from "./MessageActions";
 
 interface MessageItemProps {
   message: IMessage;
   isOwn: boolean;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
 const getInitials = (name?: string) => {
@@ -23,41 +26,56 @@ const formatTime = (isoString: string) => {
   }
 };
 
-export const MessageItem: React.FC<MessageItemProps> = ({ message, isOwn }) => {
+export const MessageItem: React.FC<MessageItemProps> = ({
+  message,
+  isOwn,
+  onEdit,
+  onDelete,
+}) => {
   const displayName = message.senderName || 'User';
   const initials = getInitials(displayName);
   const timeStr = formatTime(message.timestamp);
 
   return (
-    <div className={`flex gap-3 items-end w-full mb-4 px-4 ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
+    <div className={`group relative flex gap-3 items-end w-full mb-4 px-4 ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
       {/* Avatar circle */}
       <div className="flex-shrink-0 w-8 h-8 rounded-full bg-accent-primary flex items-center justify-center text-white text-xs font-semibold select-none shadow-sm shadow-accent-primary/20">
         {initials}
       </div>
 
-      {/* Message Bubble Container */}
-      <div className={`flex flex-col max-w-[70%] ${isOwn ? 'items-end' : 'items-start'}`}>
-        {/* Sender Name */}
-        <span className="text-xs font-medium text-text-muted mb-1 font-heading">
-          {displayName}
-        </span>
+          {/* Message Bubble Container */}
+    <div className={`relative flex flex-col max-w-[70%] ${isOwn ? 'items-end' : 'items-start'}`}>
 
-        {/* Message Bubble */}
-        <div
-          className={`px-4 py-2.5 rounded-[4px] text-sm leading-relaxed font-body shadow-sm break-words w-full
-            ${isOwn 
-              ? 'bg-accent-primary text-white rounded-br-none' 
-              : 'glass-card border border-white/5 text-[#F1F5F9] rounded-bl-none'
-            }`}
-        >
-          {message.content}
-        </div>
+      {/* Message Actions */}
+{isOwn && (
+  <MessageActions
+    content={message.content}
+    onEdit={() => onEdit(message.id)}
+    onDelete={() => onDelete(message.id)}
+  />
+)}
 
-        {/* Timestamp */}
-        <span className="text-[10px] text-text-muted mt-1 font-mono tracking-wider">
-          {timeStr}
-        </span>
+      {/* Sender Name */}
+      <span className="text-xs font-medium text-text-muted mb-1 font-heading">
+        {displayName}
+      </span>
+
+      {/* Message Bubble */}
+      <div
+        className={`px-4 py-2.5 rounded-[4px] text-sm leading-relaxed font-body shadow-sm break-words w-full
+          ${isOwn
+            ? 'bg-accent-primary text-white rounded-br-none'
+            : 'glass-card border border-white/5 text-[#F1F5F9] rounded-bl-none'
+          }`}
+      >
+        {message.content}
       </div>
+
+      {/* Timestamp */}
+      <span className="text-[10px] text-text-muted mt-1 font-mono tracking-wider">
+        {timeStr}
+      </span>
+    </div>
     </div>
   );
 };
