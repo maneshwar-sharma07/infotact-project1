@@ -1,18 +1,21 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Settings, Plus } from 'lucide-react';
 import { useWorkspace } from '../../hooks/useWorkspace.ts';
 import CreateWorkspaceModal from "./CreateWorkspaceModal";
 import UserProfileDropdown from "../user/UserProfileDropdown";
 import WorkspaceSettingsModal from "./WorkspaceSettingsModal";
+
 export const WorkspaceSidebar: React.FC = () => {
   const [openModal, setOpenModal] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
   const { workspaces, activeWorkspace, setActiveWorkspace } = useWorkspace();
 
   const getWorkspaceInitials = (name: string) => {
+    if (!name) return '';
     return name
+      .trim()
       .split(/\s+/)
-      .map((part) => part[0])
+      .map((part) => part[0] || '')
       .join('')
       .substring(0, 2)
       .toUpperCase();
@@ -22,7 +25,7 @@ export const WorkspaceSidebar: React.FC = () => {
     <div className="w-[72px] h-screen bg-[#07070A] border-r border-[#1E1E2F] shadow-lg flex flex-col items-center py-4 justify-between select-none">
       {/* Workspaces List Container */}
       <div className="flex flex-col items-center gap-3 w-full overflow-y-auto scrollbar-none">
-        {workspaces.map((ws) => {
+        {workspaces?.map((ws) => {
           const isActive = activeWorkspace?.id === ws.id;
           const initials = getWorkspaceInitials(ws.name);
 
@@ -57,7 +60,7 @@ export const WorkspaceSidebar: React.FC = () => {
         {/* Plus Button to Create Workspace */}
         <div className="relative group flex items-center justify-center w-full mt-1">
           <button
-           className="w-12 h-12 rounded-[12px] bg-[#111118] border border-[#1E293B] hover:border-accent-primary hover:bg-accent-primary/20 text-[#64748B] hover:text-white flex items-center justify-center transition-all duration-300 hover:rounded-[8px] hover:scale-105 active:scale-95 shadow-sm hover:shadow-[0_0_12px_rgba(124,58,237,0.35)] cursor-pointer"
+            className="w-12 h-12 rounded-[12px] bg-[#111118] border border-[#1E293B] hover:border-accent-primary hover:bg-accent-primary/20 text-[#64748B] hover:text-white flex items-center justify-center transition-all duration-300 hover:rounded-[8px] hover:scale-105 active:scale-95 shadow-sm hover:shadow-[0_0_12px_rgba(124,58,237,0.35)] cursor-pointer"
             onClick={() => setOpenModal(true)}
           >
             <Plus size={20} />
@@ -68,31 +71,37 @@ export const WorkspaceSidebar: React.FC = () => {
         </div>
       </div>
 
-      {/* Settings at the Bottom */}
-      <div className="relative group flex items-center justify-center w-full">
-        <button
-          className="w-12 h-12 rounded-[12px] bg-[#111118] border border-[#1E293B] hover:border-accent-primary hover:bg-accent-primary/20 text-[#64748B] hover:text-white flex items-center justify-center transition-all duration-300 hover:rounded-[8px] hover:scale-105 active:scale-95 shadow-sm hover:shadow-[0_0_12px_rgba(124,58,237,0.35)] cursor-pointer"
-          onClick={() => setOpenSettings(true)}
-        >
-          <Settings size={20} />
-        </button>
-        <div className="absolute left-[80px] bg-[#111118] text-[#F1F5F9] text-xs font-semibold py-1.5 px-3 rounded-[4px] border border-[#1E293B] shadow-lg whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 font-body">
-          Settings
+      {/* Settings & Profile at the Bottom */}
+      <div className="flex flex-col items-center gap-3 w-full">
+        {/* Settings */}
+        <div className="relative group flex items-center justify-center w-full">
+          <button
+            className="w-12 h-12 rounded-[12px] bg-[#111118] border border-[#1E293B] hover:border-accent-primary hover:bg-accent-primary/20 text-[#64748B] hover:text-white flex items-center justify-center transition-all duration-300 hover:rounded-[8px] hover:scale-105 active:scale-95 shadow-sm hover:shadow-[0_0_12px_rgba(124,58,237,0.35)] cursor-pointer"
+            onClick={() => setOpenSettings(true)}
+          >
+            <Settings size={20} />
+          </button>
+          <div className="absolute left-[80px] bg-[#111118] text-[#F1F5F9] text-xs font-semibold py-1.5 px-3 rounded-[4px] border border-[#1E293B] shadow-lg whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 font-body">
+            Settings
+          </div>
+        </div>
+
+        {/* User Profile */}
+        <div className="mb-2">
+          <UserProfileDropdown />
         </div>
       </div>
-    <div className="mb-2">
-      <UserProfileDropdown />
-    </div>
+
+      {/* Modals */}
       <CreateWorkspaceModal
-    isOpen={openModal}
-    onClose={() => setOpenModal(false)}
-  />
+        isOpen={openModal}
+        onClose={() => setOpenModal(false)}
+      />
 
-  <WorkspaceSettingsModal
-    isOpen={openSettings}
-    onClose={() => setOpenSettings(false)}
-/>
-
+      <WorkspaceSettingsModal
+        isOpen={openSettings}
+        onClose={() => setOpenSettings(false)}
+      />
     </div>
   );
 };

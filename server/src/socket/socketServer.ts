@@ -8,7 +8,7 @@ import typingHandler from './handlers/typingHandler';
 
 export let io: SocketServer;
 
-export function initSocket(httpServer: HttpServer): SocketServer {
+export async function initSocket(httpServer: HttpServer): Promise<SocketServer> {
   io = new SocketServer(httpServer, {
     cors: {
       origin: process.env.CLIENT_URL || 'http://localhost:5173',
@@ -18,14 +18,13 @@ export function initSocket(httpServer: HttpServer): SocketServer {
   });
 
   // Connect Redis clients and attach Socket.IO Redis adapter asynchronously
-  Promise.all([pubClient.connect(), subClient.connect()])
-    .then(() => {
-      io.adapter(createAdapter(pubClient, subClient));
-      console.log('Socket.IO Redis adapter integrated successfully');
-    })
-    .catch((error) => {
-      console.error('Failed to initialize Socket.IO Redis adapter:', error);
-    });
+  try {
+    await Promise.all([pubClient.connect(), subClient.connect()]);
+    io.adapter(createAdapter(pubClient, subClient));
+    console.log('Socket.IO Redis adapter integrated successfully');
+  } catch (error) {
+    console.error('Failed to initialize Socket.IO Redis adapter:', error);
+  }
 
   // Socket authentication middleware
   io.use((socket, next) => {
