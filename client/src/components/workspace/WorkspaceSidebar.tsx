@@ -1,99 +1,54 @@
-import { useState } from "react";
-import { Settings, Plus } from 'lucide-react';
-import { useWorkspace } from '../../hooks/useWorkspace.ts';
-import CreateWorkspaceModal from "./CreateWorkspaceModal";
-import UserProfileDropdown from "../user/UserProfileDropdown";
-import WorkspaceSettingsModal from "./WorkspaceSettingsModal";
-export const WorkspaceSidebar: React.FC = () => {
-  const [openModal, setOpenModal] = useState(false);
-  const [openSettings, setOpenSettings] = useState(false);
-  const { workspaces, activeWorkspace, setActiveWorkspace } = useWorkspace();
+import React, { useState } from "react";
+import { Settings, Menu } from "lucide-react";
 
-  const getWorkspaceInitials = (name: string) => {
-    return name
-      .split(/\s+/)
-      .map((part) => part[0])
-      .join('')
-      .substring(0, 2)
-      .toUpperCase();
-  };
+import WorkspaceSettingsModal from "./WorkspaceSettingsModal";
+import UserProfileDropdown from "../user/UserProfileDropdown";
+
+export const WorkspaceSidebar: React.FC = () => {
+  const [openSettings, setOpenSettings] = useState(false);
 
   return (
-    <div className="w-[72px] h-screen bg-[#07070A] border-r border-[#1E1E2F] shadow-lg flex flex-col items-center py-4 justify-between select-none">
-      {/* Workspaces List Container */}
-      <div className="flex flex-col items-center gap-3 w-full overflow-y-auto scrollbar-none">
-        {workspaces.map((ws) => {
-          const isActive = activeWorkspace?.id === ws.id;
-          const initials = getWorkspaceInitials(ws.name);
+    <aside className="w-[72px] h-screen bg-[#08090D] border-r border-[#1E293B] flex flex-col justify-between">
 
-          return (
-            <div key={ws.id} className="relative group flex items-center justify-center w-full">
-              {/* Active indicator bar */}
-              <div 
-                className={`absolute left-0 w-1 bg-accent-primary rounded-r transition-all duration-300
-                  ${isActive ? 'h-8' : 'h-2 scale-0 group-hover:scale-100 group-hover:h-5'}`}
-              />
+      {/* Top Section */}
+      <div className="flex flex-col items-center gap-4 py-4">
 
-              {/* Workspace Avatar */}
-              <button
-                onClick={() => setActiveWorkspace(ws)}
-                className={`w-12 h-12 rounded-[12px] flex items-center justify-center text-white text-base font-heading font-semibold transition-all duration-300 cursor-pointer
-                  ${isActive 
-                    ? 'bg-accent-primary rounded-[8px] shadow-[0_0_12px_rgba(124,58,237,0.5)] border border-accent-primary' 
-                    : 'bg-[#111118] hover:bg-accent-primary hover:rounded-[8px] border border-[#1E293B] hover:border-accent-primary/50'
-                  }`}
-              >
-                {initials}
-              </button>
-
-              {/* Tooltip */}
-              <div className="absolute left-[80px] bg-[#111118] text-[#F1F5F9] text-xs font-semibold py-1.5 px-3 rounded-[4px] border border-[#1E293B] shadow-lg whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 font-body">
-                {ws.name}
-              </div>
-            </div>
-          );
-        })}
-
-        {/* Plus Button to Create Workspace */}
-        <div className="relative group flex items-center justify-center w-full mt-1">
-          <button
-           className="w-12 h-12 rounded-[12px] bg-[#111118] border border-[#1E293B] hover:border-accent-primary hover:bg-accent-primary/20 text-[#64748B] hover:text-white flex items-center justify-center transition-all duration-300 hover:rounded-[8px] hover:scale-105 active:scale-95 shadow-sm hover:shadow-[0_0_12px_rgba(124,58,237,0.35)] cursor-pointer"
-            onClick={() => setOpenModal(true)}
-          >
-            <Plus size={20} />
-          </button>
-          <div className="absolute left-[80px] bg-[#111118] text-[#F1F5F9] text-xs font-semibold py-1.5 px-3 rounded-[4px] border border-[#1E293B] shadow-lg whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 font-body">
-            Add Workspace
-          </div>
-        </div>
-      </div>
-
-      {/* Settings at the Bottom */}
-      <div className="relative group flex items-center justify-center w-full">
+        {/* Menu Button (Future Sidebar Toggle) */}
         <button
-          className="w-12 h-12 rounded-[12px] bg-[#111118] border border-[#1E293B] hover:border-accent-primary hover:bg-accent-primary/20 text-[#64748B] hover:text-white flex items-center justify-center transition-all duration-300 hover:rounded-[8px] hover:scale-105 active:scale-95 shadow-sm hover:shadow-[0_0_12px_rgba(124,58,237,0.35)] cursor-pointer"
-          onClick={() => setOpenSettings(true)}
+          className="w-12 h-12 rounded-xl bg-[#151720] border border-[#1E293B]
+          text-[#94A3B8] hover:bg-violet-600 hover:text-white
+          transition-all duration-200"
         >
-          <Settings size={20} />
+          <Menu size={20} className="mx-auto" />
         </button>
-        <div className="absolute left-[80px] bg-[#111118] text-[#F1F5F9] text-xs font-semibold py-1.5 px-3 rounded-[4px] border border-[#1E293B] shadow-lg whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 font-body">
-          Settings
-        </div>
+
       </div>
-    <div className="mb-2">
-      <UserProfileDropdown />
-    </div>
-      <CreateWorkspaceModal
-    isOpen={openModal}
-    onClose={() => setOpenModal(false)}
-  />
 
-  <WorkspaceSettingsModal
-    isOpen={openSettings}
-    onClose={() => setOpenSettings(false)}
-/>
+      {/* Bottom Section */}
+      <div className="flex flex-col items-center gap-3 pb-4">
 
-    </div>
+        {/* Settings */}
+        <button
+          onClick={() => setOpenSettings(true)}
+          className="w-12 h-12 rounded-xl bg-[#151720] border border-[#1E293B]
+          text-[#94A3B8] hover:bg-violet-600 hover:text-white
+          transition-all duration-200"
+        >
+          <Settings size={20} className="mx-auto" />
+        </button>
+
+        {/* User Profile */}
+        <UserProfileDropdown />
+
+      </div>
+
+      {/* Workspace Settings Modal */}
+      <WorkspaceSettingsModal
+        isOpen={openSettings}
+        onClose={() => setOpenSettings(false)}
+      />
+
+    </aside>
   );
 };
 

@@ -1,7 +1,7 @@
-import React from 'react';
-import { useWorkspace } from '../../hooks/useWorkspace.ts';
+import React from "react";
+import { useWorkspace } from "../../hooks/useWorkspace.ts";
 import NotificationDropdown from "../user/NotificationDropdown";
-import { Users, Search, Hash } from 'lucide-react';
+import { Users, Search, Hash } from "lucide-react";
 
 export const ChannelHeader: React.FC = () => {
   const { activeWorkspace, activeChannel } = useWorkspace();
@@ -9,43 +9,74 @@ export const ChannelHeader: React.FC = () => {
   const memberCount = activeWorkspace?.members?.length || 0;
 
   return (
-    <div className="h-14 bg-[#0F0F16] border-b border-[#1E1E2F] flex items-center justify-between px-6 select-none w-full">
-      {/* Channel Title & Info */}
-      <div className="flex items-center gap-3 truncate">
+    <header className="h-16 bg-[#111118] border-b border-[#1E293B] flex items-center justify-between px-6 shadow-sm">
+
+      {/* Left */}
+      <div className="flex items-center gap-4 overflow-hidden">
+
         {activeChannel ? (
           <>
-            <div className="flex items-center gap-1 text-[#F1F5F9] font-heading font-bold text-base truncate">
-              <Hash size={18} className="text-[#64748B] flex-shrink-0" />
-              <span className="truncate">{activeChannel.name}</span>
-            </div>
-            
-            <div className="h-4 w-[1px] bg-[#1E1E2F]" />
+            {/* Channel Name */}
+            <div className="flex items-center gap-2">
 
-            <div className="flex items-center gap-1 text-xs text-[#64748B] hover:text-[#F1F5F9] transition-colors duration-200 cursor-pointer">
-              <Users size={14} />
-              <span className="font-body font-medium">{memberCount}</span>
+              <Hash
+                size={20}
+                className="text-violet-400 flex-shrink-0"
+              />
+
+              <h2 className="text-white text-lg font-semibold truncate">
+                {activeChannel.name}
+              </h2>
+
+            </div>
+
+            {/* Divider */}
+
+            <div className="w-px h-6 bg-[#2A2A35]" />
+
+            {/* Members */}
+
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#1A1A24] border border-[#2A2A35]">
+
+              <Users
+                size={15}
+                className="text-[#94A3B8]"
+              />
+
+              <span className="text-sm text-[#CBD5E1] font-medium">
+                {memberCount} Member{memberCount !== 1 ? "s" : ""}
+              </span>
+
             </div>
           </>
         ) : (
-          <span className="text-[#64748B] font-body text-sm italic">No channel selected</span>
+          <span className="text-[#64748B] text-sm italic">
+            No channel selected
+          </span>
         )}
       </div>
 
-      {/* Right Side Actions */}
-      <div className="flex items-center gap-2">
+      {/* Right */}
+
+      <div className="flex items-center gap-3">
+
+        {/* Search */}
 
         <button
-          className="p-2 hover:bg-white/5 rounded-full text-[#64748B] hover:text-[#F1F5F9] transition-all duration-200 cursor-pointer"
-          onClick={() => console.log("Search clicked")}
+          onClick={() => console.log("Search")}
+          className="w-10 h-10 rounded-xl bg-[#1A1A24] border border-[#2A2A35] flex items-center justify-center text-[#94A3B8] hover:text-white hover:border-violet-500 hover:bg-violet-500/10 transition-all duration-200"
           title="Search"
         >
-          <Search size={16} />
+          <Search size={18} />
         </button>
+
+        {/* Notifications */}
 
         <NotificationDropdown />
 
       </div>
-    </div>
+
+    </header>
   );
 };
 

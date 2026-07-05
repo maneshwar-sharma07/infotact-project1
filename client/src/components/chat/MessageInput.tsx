@@ -95,7 +95,7 @@ export const MessageInput: React.FC = () => {
   }, [channelId, userName]);
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-2 p-4 bg-[#0F0F16] border-t border-[#1E1E2F]">
+    <form onSubmit={handleSubmit} className="flex items-center gap-3 p-4 bg-[#0F0F16] border-t border-[#1E1E2F]">
       
     <FileAttachmentButton />
       <EmojiPickerButton

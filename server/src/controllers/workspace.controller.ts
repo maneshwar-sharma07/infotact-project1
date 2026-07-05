@@ -129,3 +129,91 @@ export const joinWorkspaceByToken = async (
         });
     }
 };
+
+export const generateInviteLink = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { workspaceId } = req.body;
+
+    if (!workspaceId) {
+      res.status(400).json({
+        success: false,
+        message: "Workspace ID is required",
+      });
+      return;
+    }
+
+    const workspace = await Workspace.findById(workspaceId);
+
+    if (!workspace) {
+      res.status(404).json({
+        success: false,
+        message: "Workspace not found",
+      });
+      return;
+    }
+
+    // Check user is member of workspace
+    const userId = req.user!.id;
+
+    const isMember = workspace.members.some(
+      (member) => member.toString() === userId
+    );
+
+    if (!isMember) {
+      res.status(403).json({
+        success: false,
+        message: "Forbidden: You are not a member of this workspace",
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      inviteToken: workspace.inviteToken,
+      inviteLink: `/api/workspaces/join/${workspace.inviteToken}`,
+    });
+  } catch (error) {
+    console.error("Generate Invite Link Error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+
+export const getWorkspaceMembers = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { workspaceId } = req.params;
+
+    const workspace = await Workspace.findById(workspaceId)
+      .populate("members", "name email");
+
+    if (!workspace) {
+      res.status(404).json({
+        success: false,
+        message: "Workspace not found",
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: workspace.members,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
