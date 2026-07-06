@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import EmptyChat from "./EmptyChat";
 import { useWorkspace } from '../../hooks/useWorkspace.ts';
 import { useSocket } from '../../hooks/useSocket.ts';
 import api from '../../services/api.ts';
@@ -168,23 +169,24 @@ if (!activeChannel) {
       {/* Top Header */}
       <ChannelHeader />
 
-      {/* Messages List */}
-      {loading ? (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-accent-primary"></div>
-        </div>
-      ) : error ? (
-        <div className="flex-1 flex items-center justify-center text-red-500 font-body text-sm">
-          {error}
-        </div>
-      ) : (
-        <MessageList
-        messages={messages}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
-      )}
-
+     {/* Messages List */}
+{loading ? (
+  <div className="flex-1 flex items-center justify-center">
+    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-accent-primary"></div>
+  </div>
+) : error ? (
+  <div className="flex-1 flex items-center justify-center text-red-500 font-body text-sm">
+    {error}
+  </div>
+) : messages.length === 0 ? (
+  <EmptyChat />
+) : (
+  <MessageList
+    messages={messages}
+    onEdit={handleEdit}
+    onDelete={handleDelete}
+  />
+)}
       {/* Typing Indicator */}
       <TypingIndicator />
 

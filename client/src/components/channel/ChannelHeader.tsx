@@ -1,76 +1,45 @@
 import React from "react";
-import { useWorkspace } from "../../hooks/useWorkspace.ts";
+import { useWorkspace } from "../../hooks/useWorkspace";
 import NotificationDropdown from "../user/NotificationDropdown";
-import { Users, Search, Hash } from "lucide-react";
+import { Hash, Search } from "lucide-react";
 
-export const ChannelHeader: React.FC = () => {
+const ChannelHeader: React.FC = () => {
   const { activeWorkspace, activeChannel } = useWorkspace();
 
   const memberCount = activeWorkspace?.members?.length || 0;
 
   return (
-    <header className="h-16 bg-[#111118] border-b border-[#1E293B] flex items-center justify-between px-6 shadow-sm">
+    <header className="h-16 bg-[#111318] border-b border-[#202330] flex items-center justify-between px-6">
 
       {/* Left */}
-      <div className="flex items-center gap-4 overflow-hidden">
+      <div className="flex flex-col">
 
-        {activeChannel ? (
-          <>
-            {/* Channel Name */}
-            <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
+          <Hash size={20} className="text-violet-400" />
 
-              <Hash
-                size={20}
-                className="text-violet-400 flex-shrink-0"
-              />
+          <h2 className="text-white text-lg font-bold">
+            {activeChannel?.name || "No Channel"}
+          </h2>
+        </div>
 
-              <h2 className="text-white text-lg font-semibold truncate">
-                {activeChannel.name}
-              </h2>
+        <p className="text-xs text-slate-400">
+          Workspace Collaboration Channel
+        </p>
 
-            </div>
-
-            {/* Divider */}
-
-            <div className="w-px h-6 bg-[#2A2A35]" />
-
-            {/* Members */}
-
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#1A1A24] border border-[#2A2A35]">
-
-              <Users
-                size={15}
-                className="text-[#94A3B8]"
-              />
-
-              <span className="text-sm text-[#CBD5E1] font-medium">
-                {memberCount} Member{memberCount !== 1 ? "s" : ""}
-              </span>
-
-            </div>
-          </>
-        ) : (
-          <span className="text-[#64748B] text-sm italic">
-            No channel selected
-          </span>
-        )}
       </div>
 
       {/* Right */}
-
       <div className="flex items-center gap-3">
 
-        {/* Search */}
+        <div className="px-3 py-1 rounded-full bg-[#1C1E26] text-xs text-slate-300">
+          👥 {memberCount} Member{memberCount !== 1 ? "s" : ""}
+        </div>
 
         <button
-          onClick={() => console.log("Search")}
-          className="w-10 h-10 rounded-xl bg-[#1A1A24] border border-[#2A2A35] flex items-center justify-center text-[#94A3B8] hover:text-white hover:border-violet-500 hover:bg-violet-500/10 transition-all duration-200"
-          title="Search"
+          className="w-10 h-10 rounded-xl bg-[#1C1E26] hover:bg-violet-600 transition flex items-center justify-center"
         >
           <Search size={18} />
         </button>
-
-        {/* Notifications */}
 
         <NotificationDropdown />
 
