@@ -2,12 +2,18 @@ import mongoose, {Schema,Document} from "mongoose";
 import toJSON from "../utils/toJSON";
 
 
-export interface IMessage extends Document{
-    content:string;
-    sender:mongoose.Types.ObjectId;
-    channel:mongoose.Types.ObjectId;
-    createdAt:Date;
-    updatedAt:Date;
+export interface IMessage extends Document {
+    content: string;
+
+    replyTo?: mongoose.Types.ObjectId | null;
+
+    sender: mongoose.Types.ObjectId;
+
+    channel: mongoose.Types.ObjectId;
+
+    createdAt: Date;
+
+    updatedAt: Date;
 }
 
 const messageSchema = new Schema<IMessage>(
@@ -16,6 +22,12 @@ const messageSchema = new Schema<IMessage>(
             type:String,
             required:true,
             trim:true
+        },
+
+        replyTo: {
+        type: Schema.Types.ObjectId,
+        ref: "Message",
+        default: null,
         },
         sender:{
             type:Schema.Types.ObjectId,

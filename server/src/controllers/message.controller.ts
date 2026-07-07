@@ -1,13 +1,18 @@
 import { Request, Response } from "express";
 import Message from "../models/Message";
 import Channels from "../models/Channels";
+import { io } from "../socket/socketServer";
 
 export const createMessage = async (
     req: Request,
     res: Response
 ): Promise<void> => {
     try {
-        const { content, channelId } = req.body;
+          const {
+          content,
+          channelId,
+          replyTo,
+          } = req.body;
 
         if (!content || !channelId) {
             res.status(400).json({
@@ -29,17 +34,72 @@ export const createMessage = async (
 
         const userId = (req as any).user.id;
 
-        const message = await Message.create({
-            content,
-            sender: userId,
-            channel: channelId,
-        });
+const message = await Message.create({
+  content,
+  sender: userId,
+  channel: channelId,
+  replyTo: replyTo || null,
+});
 
-        res.status(201).json({
-            success: true,
-            message: "Message created successfully",
-            data: message,
-        });
+const populatedMessage = await Message.findById(message._id)
+  .populate("sender", "name email")
+  .populate({
+    path: "replyTo",
+    populate: {
+      path: "sender",
+      select: "name",
+    },
+  });
+
+if (!populatedMessage) {
+  res.status(404).json({
+    success: false,
+    message: "Message not found",
+  });
+  return;
+}
+console.log("=========== EMIT ===========");
+console.log(populatedMessage);
+console.log(populatedMessage.replyTo);
+  io.to(channelId).emit("chat:message", {
+  id: populatedMessage!._id.toString(),
+  senderId: userId,
+  senderName: (populatedMessage!.sender as any).name,
+  channelId,
+  content: populatedMessage!.content,
+  timestamp: populatedMessage!.createdAt,
+
+  replyTo: populatedMessage!.replyTo
+    ? {
+        id: (populatedMessage!.replyTo as any)._id.toString(),
+        content: (populatedMessage!.replyTo as any).content,
+        senderName:
+          (populatedMessage!.replyTo as any).sender?.name || "User",
+      }
+    : undefined,
+});
+
+res.status(201).json({
+  success: true,
+  message: "Message created successfully",
+  data: {
+    id: populatedMessage!._id,
+    content: populatedMessage!.content,
+    senderId: userId,
+    senderName: (populatedMessage!.sender as any).name,
+    channelId,
+    timestamp: populatedMessage!.createdAt,
+
+    replyTo: populatedMessage!.replyTo
+      ? {
+          id: (populatedMessage!.replyTo as any)._id,
+          content: (populatedMessage!.replyTo as any).content,
+          senderName:
+            (populatedMessage!.replyTo as any).sender?.name || "User",
+        }
+      : undefined,
+  },
+});
     } catch (error) {
         console.error("Create Message Error:", error);
 
@@ -73,8 +133,15 @@ export const getMessages = async (
         const messages = await Message.find({
             channel: channelId,
         })
-            .populate("sender", "name email")
-            .sort({ createdAt: -1 })
+            .populate("sender","name email")
+            .populate({
+                path:"replyTo",
+                populate:{
+                    path:"sender",
+                    select:"name"
+                }
+            })
+            .sort({ createdAt: 1 })
             .skip(skip)
             .limit(limit);
 
@@ -82,13 +149,30 @@ export const getMessages = async (
             channel: channelId,
         });
 
-        res.status(200).json({
-            success: true,
-            total,
-            page,
-            limit,
-            data: messages,
-        });
+      const formatted = messages.map((msg: any) => ({
+        id: msg._id,
+        content: msg.content,
+        senderId: msg.sender?._id,
+        senderName: msg.sender?.name,
+        channelId: msg.channel,
+        timestamp: msg.createdAt,
+
+        replyTo: msg.replyTo
+          ? {
+              id: msg.replyTo._id,
+              content: msg.replyTo.content,
+              senderName: msg.replyTo.sender?.name || "User",
+            }
+          : undefined,
+      }));
+
+      res.status(200).json({
+        success: true,
+        total,
+        page,
+        limit,
+        data: formatted,
+      });
     } catch (error) {
         console.error("Get Messages Error:", error);
 
@@ -97,4 +181,103 @@ export const getMessages = async (
             message: "Internal Server Error",
         });
     }
+};
+
+
+// ======================
+// Edit Message
+// ======================
+
+export const updateMessage = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { content } = req.body;
+
+    const message = await Message.findById(id);
+
+    if (!message) {
+      res.status(404).json({
+        success: false,
+        message: "Message not found",
+      });
+      return;
+    }
+
+    if (message.sender.toString() !== req.user!.id) {
+      res.status(403).json({
+        success: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
+
+    message.content = content;
+    await message.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Message updated successfully",
+      data: message,
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+// ======================
+// Delete Message
+// ======================
+
+export const deleteMessage = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+
+    const { id } = req.params;
+
+    const message = await Message.findById(id);
+
+    if (!message) {
+      res.status(404).json({
+        success: false,
+        message: "Message not found",
+      });
+      return;
+    }
+
+    if (message.sender.toString() !== req.user!.id) {
+      res.status(403).json({
+        success: false,
+        message: "Unauthorized",
+      });
+      return;
+    }
+
+    await message.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: "Message deleted successfully",
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+
+  }
 };
