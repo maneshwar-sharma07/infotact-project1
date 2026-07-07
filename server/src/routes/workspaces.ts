@@ -8,17 +8,29 @@ import {
   getWorkspaceMembers,
 } from "../controllers/workspace.controller";
 
-import { verifyToken } from "../middlewares/verifyToken";
+import { verifyToken } from "../middleware/verifyToken";
+import { validate } from "../middleware/validate";
+import { createWorkspaceValidation } from "../validators/workspace.validator";
 
 const router = Router();
 
 router.use(verifyToken);
 
-router.post("/", createWorkspace);
+// Workspace
+router.post(
+  "/",
+  createWorkspaceValidation,
+  validate,
+  createWorkspace
+);
+
 router.get("/", getWorkspaces);
 
+// Invite
 router.post("/invite", generateInviteLink);
 router.post("/join/:token", joinWorkspaceByToken);
+
+// Members
 router.get("/:workspaceId/members", getWorkspaceMembers);
 
 export default router;

@@ -7,14 +7,22 @@ import {
   generateInviteLink,
 } from "../controllers/workspace.controller";
 
-import { verifyToken } from "../middlewares/verifyToken";
+import { verifyToken } from "../middleware/verifyToken";
+import { validate } from "../middleware/validate";
+import { createWorkspaceValidation } from "../validators/workspace.validator";
 
 const router = Router();
 
 router.use(verifyToken);
 
 // Workspace APIs
-router.post("/", createWorkspace);
+router.post(
+  "/",
+  createWorkspaceValidation,
+  validate,
+  createWorkspace
+);
+
 router.get("/", getWorkspaces);
 
 // Invite APIs

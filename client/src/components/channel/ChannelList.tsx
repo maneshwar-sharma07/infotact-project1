@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useWorkspace } from "../../hooks/useWorkspace.ts";
 import type { IChannel } from "../../types/index.ts";
+
 import CreateChannelModal from "./CreateChannelModal";
 import CreateWorkspaceModal from "../workspace/CreateWorkspaceModal";
 import {
@@ -32,11 +33,11 @@ const {
   );
 
   return (
-    <>
-      <aside className="w-[260px] h-screen bg-[#0D0E14] border-r border-[#1E293B] flex flex-col">
+<>
+  <aside className="w-[260px] h-screen bg-[#0D0E14] border-r border-[#1E293B] flex flex-col">
 
         {/* Workspace Header */}
-        <div className="px-5 py-4 border-b border-[#1E293B]">
+      <div className="px-5 py-4 border-b border-[#1E293B]">
 
 <div className="flex items-center gap-3">
 

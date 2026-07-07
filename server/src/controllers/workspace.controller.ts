@@ -19,11 +19,25 @@ export const createWorkspace = async (
         }
 
         const userId = req.user!.id;
+
+          const existingWorkspace = await Workspace.findOne({
+            owner:userId,
+            name:name.trim(),
+          });
+
+        if (existingWorkspace) {
+            res.status(409).json({
+                success: false,
+                message: "Workspace with this name already exists",
+            });
+            return;
+        }
+
         const inviteToken = crypto.randomBytes(16).toString("hex");
 
         const workspace = await Workspace.create({
-            name,
-            description,
+            name: name.trim(),
+            description: description?.trim(),
             owner: userId,
             inviteToken,
             members: [userId],
@@ -47,7 +61,7 @@ export const createWorkspace = async (
             success: true,
             message: "Workspace created successfully",
             data: populatedWorkspace,
-            inviteLink: `/api/workspaces/join/${inviteToken}`,
+            inviteLink: `/api/workspaces/join/${workspace.inviteToken}`,
         });
     } catch (error) {
         console.error("Create Workspace Error:", error);
@@ -70,10 +84,16 @@ export const getWorkspaces = async (
             members: userId,
         }).populate('channels');
 
+        const formattedWorkspaces = workspaces.map((workspace:any) => ({
+             ...workspace.toObject(),
+             memberCount : workspace.members.length,
+             channelCount : workspace.channels.length,
+        }));
+
         res.status(200).json({
             success: true,
             count: workspaces.length,
-            data: workspaces,
+            data: formattedWorkspaces,
         });
     } catch (error) {
         console.error("Get Workspaces Error:", error);

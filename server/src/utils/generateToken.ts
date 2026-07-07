@@ -7,8 +7,8 @@ export interface TokenPayload {
 }
 
 /**
- * Generates a JWT token signed with JWT_SECRET and expiring in JWT_EXPIRES_IN.
- * Defaults role to 'member' and email to empty string if not provided.
+ *Generates a JWT token signed with JWT_SECRET and expiring in JWT_EXPIRES_IN.
+ *Defaults role to 'member' and email to empty string if not provided.
  */
 export const generateToken = (id: string, role: string = 'member', email: string = ''): string => {
   const jwtSecret = process.env.JWT_SECRET || 'your_super_secret_key_min_32_chars';
