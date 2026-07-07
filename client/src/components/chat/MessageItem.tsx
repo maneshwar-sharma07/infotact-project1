@@ -5,6 +5,7 @@ import MessageActions from "./MessageActions";
 interface MessageItemProps {
   message: IMessage;
   isOwn: boolean;
+  onReply: (message: IMessage) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 }
@@ -29,6 +30,7 @@ const formatTime = (isoString: string) => {
 export const MessageItem: React.FC<MessageItemProps> = ({
   message,
   isOwn,
+  onReply,
   onEdit,
   onDelete,
 }) => {
@@ -47,13 +49,14 @@ export const MessageItem: React.FC<MessageItemProps> = ({
     <div className={`relative flex flex-col max-w-[70%] ${isOwn ? 'items-end' : 'items-start'}`}>
 
       {/* Message Actions */}
-{isOwn && (
+
   <MessageActions
     content={message.content}
+    onReply={() => onReply(message)}
     onEdit={() => onEdit(message.id)}
     onDelete={() => onDelete(message.id)}
   />
-)}
+
 
       {/* Sender Name */}
       <span className="text-xs font-medium text-text-muted mb-1 font-heading">
@@ -67,7 +70,21 @@ export const MessageItem: React.FC<MessageItemProps> = ({
             ? 'bg-accent-primary text-white rounded-br-none'
             : 'glass-card border border-white/5 text-[#F1F5F9] rounded-bl-none'
           }`}
+        
       >
+        {message.replyTo && (
+        <div className="mb-3 rounded-md border-l-2 border-violet-500 bg-black/20 p-2">
+          <p className="text-xs font-semibold text-violet-400">
+            Reply to {message.replyTo.senderName}
+          </p>
+
+          <p className="truncate text-xs text-gray-400">
+            {message.replyTo.content}
+          </p>
+        </div>
+      )}
+
+
         {message.content}
       </div>
 

@@ -35,6 +35,11 @@ export interface IMessage {
   content: string;
   timestamp: string;
   senderName?: string;
+  replyTo?: {
+    id:string;
+    content:string;
+    senderName:string;
+};
 }
 
 export interface IAuthResponse {

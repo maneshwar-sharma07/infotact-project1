@@ -13,6 +13,9 @@ import MessageInput from './MessageInput.tsx';
 export const ChatArea: React.FC = () => {
   const { activeChannel } = useWorkspace();
   const [messages, setMessages] = useState<IMessage[]>([]);
+  const [replyMessage, setReplyMessage] =
+  useState<IMessage | null>(null);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -81,12 +84,28 @@ const handleDelete = async (id: string) => {
             : msg.senderName || 'User';
 
           return {
-            id: msg.id || msg._id || '',
-            senderId: senderId || '',
-            senderName: senderName || 'User',
-            channelId: msg.channel?.id || msg.channel?._id || msg.channelId || msg.channel || '',
+            id: msg.id || msg._id || "",
+            senderId: senderId || "",
+            senderName: senderName || "User",
+            channelId:
+              msg.channel?.id ||
+              msg.channel?._id ||
+              msg.channelId ||
+              msg.channel ||
+              "",
             content: msg.content,
-            timestamp: msg.createdAt || msg.timestamp || new Date().toISOString()
+            timestamp:
+              msg.createdAt ||
+              msg.timestamp ||
+              new Date().toISOString(),
+
+              replyTo: msg.replyTo
+                ? {
+                    id: msg.replyTo.id,
+                    content: msg.replyTo.content,
+                    senderName: msg.replyTo.senderName,
+                  }
+                : undefined,
           };
         });
 
@@ -109,7 +128,9 @@ const handleDelete = async (id: string) => {
   useEffect(() => {
     if (!socket || !channelId) return;
 
-    const handleNewMessage = (payload: any) => {
+      const handleNewMessage = (payload: any) => {
+      console.log("🔥 SOCKET RECEIVED");
+console.log(payload);
       const message = payload.message || payload;
       if (message) {
         const senderId = typeof message.sender === 'object' 
@@ -121,12 +142,28 @@ const handleDelete = async (id: string) => {
           : message.senderName || 'User';
 
         const formatted: IMessage = {
-          id: message.id || message._id || '',
-          senderId: senderId || '',
-          senderName: senderName || 'User',
-          channelId: message.channel?.id || message.channel?._id || message.channelId || message.channel || '',
+          id: message.id || message._id || "",
+          senderId: senderId || "",
+          senderName: senderName || "User",
+          channelId:
+            message.channel?.id ||
+            message.channel?._id ||
+            message.channelId ||
+            message.channel ||
+            "",
           content: message.content,
-          timestamp: message.createdAt || message.timestamp || new Date().toISOString()
+          timestamp:
+            message.createdAt ||
+            message.timestamp ||
+            new Date().toISOString(),
+
+          replyTo: message.replyTo
+            ? {
+                id: message.replyTo.id,
+                content: message.replyTo.content,
+                senderName: message.replyTo.senderName,
+              }
+            : undefined,
         };
 
         if (formatted.channelId === channelId) {
@@ -185,13 +222,17 @@ if (!activeChannel) {
     messages={messages}
     onEdit={handleEdit}
     onDelete={handleDelete}
+    onReply={setReplyMessage}
   />
 )}
       {/* Typing Indicator */}
       <TypingIndicator />
 
       {/* Message Input */}
-      <MessageInput />
+      <MessageInput
+      replyMessage={replyMessage}
+      setReplyMessage={setReplyMessage}
+    />
     </div>
   );
 };

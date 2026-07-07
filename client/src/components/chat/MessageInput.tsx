@@ -1,33 +1,55 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useWorkspace } from '../../hooks/useWorkspace.ts';
-import { useAuth } from '../../hooks/useAuth.ts';
-import { socket } from '../../services/socket.ts';
-import Button from '../ui/Button.tsx';
+import React, { useState, useEffect, useRef } from "react";
+import { X, Send } from "lucide-react";
+
+import { useWorkspace } from "../../hooks/useWorkspace.ts";
+import { useAuth } from "../../hooks/useAuth.ts";
+import { socket } from "../../services/socket.ts";
+import api from "../../services/api.ts";
+
+import Button from "../ui/Button.tsx";
 import FileAttachmentButton from "./FileAttachmentButton";
 import EmojiPickerButton from "./EmojiPickerButton";
-import { Send } from 'lucide-react';
 
-export const MessageInput: React.FC = () => {
+import type { IMessage } from "../../types";
+
+interface MessageInputProps {
+  replyMessage: IMessage | null;
+  setReplyMessage: React.Dispatch<
+    React.SetStateAction<IMessage | null>
+  >;
+}
+
+const MessageInput: React.FC<MessageInputProps> = ({
+  replyMessage,
+  setReplyMessage,
+}) => {
   const { activeChannel } = useWorkspace();
   const { user } = useAuth();
-  const [content, setContent] = useState('');
+
+  const [content, setContent] = useState("");
+
   const isTypingRef = useRef(false);
-  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const typingTimeoutRef =
+    useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const channelId = activeChannel?.id;
-  const userName = user?.name || 'Anonymous';
-  const senderId = user?.id;
+  const userName = user?.name || "Anonymous";
 
-  const handleStopTyping = () => {
+  const stopTyping = () => {
     if (isTypingRef.current && channelId) {
-      socket.emit('typing:stop', { channelId, userName });
+      socket.emit("typing:stop", {
+        channelId,
+        userName,
+      });
+
       isTypingRef.current = false;
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // If Enter key is pressed without Shift, submit form
-    if (e.key === 'Enter' && !e.shiftKey) {
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
       return;
@@ -35,92 +57,142 @@ export const MessageInput: React.FC = () => {
 
     if (!channelId) return;
 
-    // Emit typing:start if not already typing
     if (!isTypingRef.current) {
       isTypingRef.current = true;
-      socket.emit('typing:start', { channelId, userName });
+
+      socket.emit("typing:start", {
+        channelId,
+        userName,
+      });
     }
 
-    // Reset idle timeout
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
 
     typingTimeoutRef.current = setTimeout(() => {
-      handleStopTyping();
-    }, 2000); // 2s Idle
+      stopTyping();
+    }, 2000);
   };
 
   const handleBlur = () => {
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
-    handleStopTyping();
+
+    stopTyping();
   };
 
   const addEmoji = (emoji: string) => {
-  setContent((prev) => prev + emoji);
-};
-
-  const handleSubmit = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!content.trim() || !channelId || !senderId) return;
-
-    // Emit message
-    socket.emit('chat:message', {
-      channelId,
-      content: content.trim(),
-      senderId,
-    });
-
-    setContent('');
-
-    // Stop typing indicator immediately on submit
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-    handleStopTyping();
+    setContent((prev) => prev + emoji);
   };
 
-  // Cleanup timeout on unmount or channel change
+  const handleSubmit = async (
+    e?: React.FormEvent
+  ) => {
+    if (e) e.preventDefault();
+
+    if (!content.trim() || !channelId) return;
+
+    try {
+      await api.post("/messages", {
+        content: content.trim(),
+        channelId,
+        replyTo: replyMessage?.id || null,
+      });
+
+      setContent("");
+
+      setReplyMessage(null);
+
+      stopTyping();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     return () => {
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
-      if (isTypingRef.current && channelId) {
-        socket.emit('typing:stop', { channelId, userName });
-      }
+
+      stopTyping();
     };
-  }, [channelId, userName]);
+  }, []);
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-3 p-4 bg-[#0F0F16] border-t border-[#1E1E2F]">
-      
-    <FileAttachmentButton />
-      <EmojiPickerButton
-      onSelect={addEmoji}
-    />
-      <input
-        type="text"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        onKeyDown={handleKeyDown}
-        onBlur={handleBlur}
-        placeholder={activeChannel ? `Message #${activeChannel.name}` : 'Select a channel to chat'}
-        disabled={!activeChannel}
-       className="flex-1 bg-[#111118] text-[#F1F5F9] placeholder:text-[#64748B] text-sm border border-[#1E293B] rounded-xl py-3 px-4 focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed font-body"
-      />
-      <Button
-        type="submit"
-        disabled={!content.trim() || !activeChannel}
-        variant="primary"
-        size="md"
-        className="flex items-center justify-center p-2.5 transition-all duration-200 hover:scale-105"
+    <div className="border-t border-[#1E293B] bg-[#0F1117]">
+
+      {/* Reply Preview */}
+
+      {replyMessage && (
+        <div className="mx-4 mt-3 mb-2 rounded-xl border border-violet-500/40 bg-violet-500/10 p-3">
+
+          <div className="flex items-start justify-between">
+
+            <div>
+
+              <p className="text-xs font-semibold text-violet-400">
+                Replying to {replyMessage.senderName}
+              </p>
+
+              <p className="mt-1 text-sm text-slate-300 truncate">
+                {replyMessage.content}
+              </p>
+
+            </div>
+
+            <button
+              onClick={() => setReplyMessage(null)}
+              className="text-slate-400 hover:text-white"
+            >
+              <X size={18} />
+            </button>
+
+          </div>
+
+        </div>
+      )}
+
+      <form
+        onSubmit={handleSubmit}
+        className="flex items-center gap-3 p-4"
       >
-        <Send size={16} />
-      </Button>
-    </form>
+        <FileAttachmentButton />
+
+        <EmojiPickerButton
+          onSelect={addEmoji}
+        />
+
+        <input
+          type="text"
+          value={content}
+          onChange={(e) =>
+            setContent(e.target.value)
+          }
+          onKeyDown={handleKeyDown}
+          onBlur={handleBlur}
+          placeholder={
+            activeChannel
+              ? `Message #${activeChannel.name}`
+              : "Select a channel"
+          }
+          disabled={!activeChannel}
+          className="flex-1 rounded-xl border border-[#1E293B] bg-[#111118] px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20"
+        />
+
+        <Button
+          type="submit"
+          disabled={!content.trim()}
+          variant="primary"
+          size="md"
+          className="flex items-center justify-center p-2.5"
+        >
+          <Send size={18} />
+        </Button>
+      </form>
+    </div>
   );
 };
 
