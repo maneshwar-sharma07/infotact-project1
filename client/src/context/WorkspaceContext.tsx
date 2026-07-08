@@ -32,6 +32,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const response = await api.get("/workspaces");
 
     console.log("Workspace Response:", response.data);
+    console.log(response.data.data);
 
     const rawData = response.data;
     const workspacesList = Array.isArray(rawData)

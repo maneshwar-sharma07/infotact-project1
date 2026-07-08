@@ -33,6 +33,11 @@ const MessageInput: React.FC<MessageInputProps> = ({
     useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const channelId = activeChannel?.id;
+  console.log("INPUT ACTIVE CHANNEL");
+console.log(activeChannel);
+
+console.log("INPUT CHANNEL ID");
+console.log(channelId);
   const userName = user?.name || "Anonymous";
 
   const stopTyping = () => {

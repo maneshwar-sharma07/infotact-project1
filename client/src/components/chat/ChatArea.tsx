@@ -54,6 +54,11 @@ const handleDelete = async (id: string) => {
 };
 
   const channelId = activeChannel?.id;
+console.log("ACTIVE CHANNEL");
+console.log(activeChannel);
+
+console.log("CHANNEL ID");
+console.log(channelId);
 
   // Establish connection and events subscription for this channel
   const socket = useSocket(channelId);
