@@ -1,44 +1,46 @@
-import mongoose, {Schema,model,Document} from 'mongoose';
-import toJSON from "../utils/toJSON";
+import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IUser extends Document {
-    name:string;
-    email:string;
-    passwordHash:string;
-    avatarUrl?:string;
-    createdAt:Date;
-    updatedAt:Date;
+  name: string;
+  email: string;
+  password: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const userSchema = new Schema<IUser>(
-    {
-        name:{
-            type:String,
-            required:true,
-            trim:true
-        },
-        email:{
-             type:String,
-            required:true,
-            unique:true,
-            lowercase:true,
-            trim:true
-        },
-        passwordHash:{
-          type:String,
-            required:true
-        },
-        avatarUrl:{
-           type:String,
-           default:"",
-        },
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
     },
-    {
-        timestamps:true,
-    }
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+    },
+    password: {
+      type: String,
+      required: true,
+      minlength: 6,
+    },
+  },
+  {
+    timestamps: true,
+  }
 );
-toJSON(userSchema);
 
-const User = mongoose.model<IUser>("User",userSchema);
+// Remove password from JSON response - FIXED
+userSchema.set('toJSON', {
+  transform: (doc, ret) => {
+    // Method 1: Delete password (TypeScript safe)
+    delete (ret as { password?: string }).password;
+    return ret;
+  },
+});
 
+const User = mongoose.model<IUser>('User', userSchema);
 export default User;

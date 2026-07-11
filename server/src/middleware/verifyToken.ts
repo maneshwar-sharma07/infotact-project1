@@ -1,64 +1,40 @@
-import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 
-interface DecodedToken {
-    id: string;
-}
-
-declare global {
-    namespace Express {
-        interface Request {
-            user?: {
-                id: string;
-                role: string;
-                email: string;
-            };
-        }
+export const verifyToken = (req: Request, res: Response, next: NextFunction): void => {
+  try {
+    // Get token from header
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      res.status(401).json({
+        success: false,
+        message: 'No token provided',
+      });
+      return;
     }
-}
 
-export const verifyToken = (
-    req: Request,
-    res: Response,
-    next: NextFunction
-): void => {
-    try {
-        const authHeader = req.headers.authorization;
+    const token = authHeader.split(' ')[1];
 
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            res.status(401).json({
-                success: false,
-                message: "Access denied. No token provided.",
-            });
-            return;
-        }
+    // Verify token
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || 'secret'
+    ) as { id: string; email: string; role?: string };
 
-        const token = authHeader.split(" ")[1];
+    // Attach user to request
+    req.user = {
+      id: decoded.id,
+      email: decoded.email,
+      role: decoded.role || 'user',
+    };
 
-        if (!token) {
-            res.status(401).json({
-                success: false,
-                message: "Invalid token format.",
-            });
-            return;
-        }
-
-        const decoded = jwt.verify(
-            token,
-            process.env.JWT_SECRET!
-        ) as any;
-
-        req.user = {
-            id: decoded.id,
-            role: decoded.role || '',
-            email: decoded.email || '',
-        };
-
-        next();
-    } catch (error) {
-        res.status(401).json({
-            success: false,
-            message: "Invalid or expired token.",
-        });
-    }
+    next();
+  } catch (error) {
+    console.error('Token Verification Error:', error);
+    res.status(401).json({
+      success: false,
+      message: 'Invalid or expired token',
+    });
+  }
 };

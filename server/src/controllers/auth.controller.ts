@@ -1,95 +1,159 @@
-import {Request,Response} from 'express';
-import bcrypt from 'bcrypt';
-
+import { Request, Response } from 'express';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import User from '../models/User';
-import generateToken from '../utils/generateToken';
 
-export const register = async (req:Request,res:Response):Promise<void> => {
-    try {
-        const {name,email,password,avatarUrl} = req.body;
-        if(!name || !email || !password){
-            res.status(400).json({
-                success:false,
-                message:"Name, email and password are required"});
-            return;
-        }
-            const existingUser = await User.findOne({
-                email:email.toLowerCase(),
-            });
-            if(existingUser){
-                res.status(409).json({
-                    success:false,
-                    message:"User already exists",
-                });
-                return;
-            }
+const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
-            const passwordHash = await bcrypt.hash(password,10);
-            const user = await User.create({
-                name,
-                email:email.toLowerCase(),
-                passwordHash,
-                avatarUrl,
-            });
-            res.status(201).json({
-                success:true,
-                message:"User registered successfully",
-                user,
-            });
-        } catch (error) {
-            console.error("Error in register:", error);
-            res.status(500).json({
-                success:false,
-                message:"Internal server error"
-            });
-        }
-    };
+// ======================
+// JWT Helper Functions
+// ======================
+export const generateToken = (userId: string, email: string): string => {
+  return jwt.sign(
+    { id: userId, email },
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRES_IN } as jwt.SignOptions
+  );
+};
 
-    export const login = async (
-        req:Request,
-        res:Response
-    ):Promise<void> =>{
-      try{
-        const {email,password}= req.body;
-        if(!email ||!password){
-            res.status(400).json({
-                success:false,
-                message:"Email and password are required"
-            });
-            return;
-        }
-        const user = await User.findOne(
-            {email:email.toLowerCase()});
-            if(!user){
-                res.status(401).json({
-                    success:false,
-                    message:"Invalid Credentials"
-                });
-                return;
-            }
-            const isPasswordCorrect = await bcrypt.compare(
-                password,
-                user.passwordHash
-            );
-            if(!isPasswordCorrect){
-                res.status(401).json({
-                    success:false,
-                    message:"Invalid credentials"
-                });
-                return;
-            }
-            const token = generateToken(user.id);
-            res.status(200).json({
-                success:true,
-                message:"Login Successful",
-                token,
-                user
-            });
-      }catch(error){
-        console.error("Error in Login:",error);
-        res.status(500).json({
-            success:false,
-            message:"Internal Server Error"
-        });
-      }
-    };
+export const verifyToken = (token: string): any => {
+  return jwt.verify(token, JWT_SECRET);
+};
+
+// ======================
+// Register User
+// ======================
+export const register = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { name, email, password } = req.body;
+
+    // Check if user exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      res.status(400).json({
+        success: false,
+        message: 'User already exists with this email',
+      });
+      return;
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create user
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+    });
+
+    // Generate JWT - Using helper function
+    const token = generateToken(user._id.toString(), user.email);
+
+    res.status(201).json({
+      success: true,
+      message: 'User registered successfully',
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        token,
+      },
+    });
+  } catch (error) {
+    console.error('Register Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error',
+    });
+  }
+};
+
+// ======================
+// Login User
+// ======================
+export const login = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, password } = req.body;
+
+    // Find user
+    const user = await User.findOne({ email });
+    if (!user) {
+      res.status(401).json({
+        success: false,
+        message: 'Invalid credentials',
+      });
+      return;
+    }
+
+    // Check password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      res.status(401).json({
+        success: false,
+        message: 'Invalid credentials',
+      });
+      return;
+    }
+
+    // Generate JWT - Using helper function
+    const token = generateToken(user._id.toString(), user.email);
+
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        token,
+      },
+    });
+  } catch (error) {
+    console.error('Login Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error',
+    });
+  }
+};
+
+// ======================
+// Get Current User (Me)
+// ======================
+export const getMe = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user!.id;
+    
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        message: 'Unauthorized',
+      });
+      return;
+    }
+
+    const user = await User.findById(userId).select('-password');
+    
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    console.error('Get Me Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error',
+    });
+  }
+};

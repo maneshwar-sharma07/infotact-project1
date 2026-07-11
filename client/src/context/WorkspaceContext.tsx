@@ -12,6 +12,8 @@ export interface WorkspaceContextType {
   setActiveChannel: (channel: IChannel) => void;
   fetchWorkspaces: () => Promise<void>;
   updateWorkspace: (workspace: IWorkspace) => void;
+  removeWorkspace: (workspaceId: string) => void;
+  addChannelToWorkspace: (workspaceId: string, channel: IChannel) => void;
 }
 
 export const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
@@ -24,20 +26,51 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const { workspaceId, channelId } = useParams<{ workspaceId: string; channelId: string }>();
   const navigate = useNavigate();
+
+  const getId = (item: any) => {
+    if (typeof item === "string") return item;
+    return String(item?.id || item?._id || "");
+  };
+
+  const normalizeChannel = (channel: any): IChannel => ({
+    ...channel,
+    id: getId(channel),
+    workspaceId:
+      channel?.workspaceId ||
+      channel?.workspace?.id ||
+      channel?.workspace?._id ||
+      channel?.workspace ||
+      "",
+  });
+
+  const normalizeWorkspace = (workspace: any): IWorkspace => ({
+    ...workspace,
+    id: getId(workspace),
+    ownerId:
+      workspace?.ownerId ||
+      workspace?.createdBy?.id ||
+      workspace?.createdBy?._id ||
+      workspace?.createdBy ||
+      "",
+    channels: ((workspace?.channels || []) as any[]).map((channel) =>
+      typeof channel === "object" ? normalizeChannel(channel) : channel
+    ),
+    members: workspace?.members || [],
+  });
+
+  const getWorkspaceChannels = (workspace: IWorkspace | null) =>
+    (((workspace?.channels || []) as any[]).filter(
+      (c) => c && typeof c === "object" && "name" in c
+    ) as IChannel[]);
   
   const fetchWorkspaces = async () => {
   try {
-    console.log("Token:", localStorage.getItem("token"));
-
     const response = await api.get("/workspaces");
 
-    console.log("Workspace Response:", response.data);
-    console.log(response.data.data);
-
     const rawData = response.data;
-    const workspacesList = Array.isArray(rawData)
+    const workspacesList = (Array.isArray(rawData)
       ? rawData
-      : rawData?.data || [];
+      : rawData?.data || []).map(normalizeWorkspace);
 
     setWorkspaces(workspacesList);
 
@@ -48,11 +81,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       setActiveWorkspaceState(targetWorkspace);
 
-      const workspaceChannels = (
-        (targetWorkspace?.channels || []) as any[]
-      ).filter(
-        (c) => c && typeof c === "object" && "name" in c
-      ) as IChannel[];
+      const workspaceChannels = getWorkspaceChannels(targetWorkspace);
 
       let targetChannel =
         workspaceChannels.find((c: any) => c.id === channelId) ||
@@ -65,7 +94,12 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (
         targetWorkspace &&
         targetChannel &&
-        (workspaceId === "default" || channelId === "general")
+        targetWorkspace.id &&
+        targetChannel.id &&
+        (workspaceId === "default" ||
+          channelId === "general" ||
+          workspaceId !== targetWorkspace.id ||
+          channelId !== targetChannel.id)
       ) {
         navigate(`/app/${targetWorkspace.id}/${targetChannel.id}`, {
           replace: true,
@@ -78,37 +112,92 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 };
 
   const setActiveWorkspace = (workspace: IWorkspace) => {
-    setActiveWorkspaceState(workspace);
+    const normalizedWorkspace = normalizeWorkspace(workspace);
+    setActiveWorkspaceState(normalizedWorkspace);
     
-    const workspaceChannels = ((workspace?.channels || []) as any[]).filter(
-      (c) => c && typeof c === 'object' && 'name' in c
-    ) as IChannel[];
+    const workspaceChannels = getWorkspaceChannels(normalizedWorkspace);
 
     const firstChannel = workspaceChannels.length > 0 ? workspaceChannels[0] : null;
     setActiveChannelState(firstChannel);
     
-    if (firstChannel) {
-      navigate(`/app/${workspace.id}/${firstChannel.id}`);
-    } else {
-      navigate(`/app/${workspace.id}/no-channel`);
+    if (normalizedWorkspace.id && firstChannel?.id) {
+      navigate(`/app/${normalizedWorkspace.id}/${firstChannel.id}`);
+    } else if (normalizedWorkspace.id) {
+      navigate(`/app/${normalizedWorkspace.id}/no-channel`);
     }
   };
 
   const setActiveChannel = (channel: IChannel) => {
-    setActiveChannelState(channel);
-    if (activeWorkspace) {
-      navigate(`/app/${activeWorkspace.id}/${channel.id}`);
+    const normalizedChannel = normalizeChannel(channel);
+    setActiveChannelState(normalizedChannel);
+    if (activeWorkspace?.id && normalizedChannel.id) {
+      navigate(`/app/${activeWorkspace.id}/${normalizedChannel.id}`);
     }
   };
   const updateWorkspace = (updatedWorkspace: IWorkspace) => {
+  const normalizedWorkspace = normalizeWorkspace(updatedWorkspace);
+
   setWorkspaces((prev) =>
     prev.map((ws) =>
-      ws.id === updatedWorkspace.id ? updatedWorkspace : ws
+      ws.id === normalizedWorkspace.id ? normalizedWorkspace : ws
     )
   );
 
-  setActiveWorkspaceState(updatedWorkspace);
+  setActiveWorkspaceState(normalizedWorkspace);
 };
+
+  const removeWorkspace = (workspaceId: string) => {
+    setWorkspaces((previous) => previous.filter((workspace) => workspace.id !== workspaceId));
+    setActiveWorkspaceState((current) => {
+      if (current?.id !== workspaceId) return current;
+      setActiveChannelState(null);
+      navigate('/app/default/general', { replace: true });
+      return null;
+    });
+  };
+
+  const addChannelToWorkspace = (workspaceId: string, channel: IChannel) => {
+    const nextChannel = normalizeChannel(channel);
+    const normalizedChannel = {
+      ...nextChannel,
+      workspaceId: nextChannel.workspaceId || workspaceId,
+    };
+
+    if (!workspaceId || !normalizedChannel.id) return;
+
+    setWorkspaces((prev) =>
+      prev.map((workspace) => {
+        if (workspace.id !== workspaceId) return workspace;
+
+        const channels = getWorkspaceChannels(workspace);
+        const nextChannels = channels.some((item) => item.id === normalizedChannel.id)
+          ? channels
+          : [...channels, normalizedChannel];
+
+        return {
+          ...workspace,
+          channels: nextChannels,
+        };
+      })
+    );
+
+    setActiveWorkspaceState((current) => {
+      if (!current || current.id !== workspaceId) return current;
+      const channels = getWorkspaceChannels(current);
+      const nextChannels = channels.some((item) => item.id === normalizedChannel.id)
+        ? channels
+        : [...channels, normalizedChannel];
+      return {
+        ...current,
+        channels: nextChannels,
+      };
+    });
+
+    setActiveChannelState(normalizedChannel);
+    if (workspaceId && normalizedChannel.id) {
+      navigate(`/app/${workspaceId}/${normalizedChannel.id}`);
+    }
+  };
 
   // On mount: fetch workspaces if authenticated
   useEffect(() => {
@@ -129,16 +218,12 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (matchedWorkspace && matchedWorkspace.id !== activeWorkspace?.id) {
       setActiveWorkspaceState(matchedWorkspace);
 
-      const workspaceChannels = ((matchedWorkspace?.channels || []) as any[]).filter(
-        (c) => c && typeof c === 'object' && 'name' in c
-      ) as IChannel[];
+      const workspaceChannels = getWorkspaceChannels(matchedWorkspace);
 
       const matchedChannel = workspaceChannels.find((c) => c.id === channelId) || workspaceChannels[0] || null;
       setActiveChannelState(matchedChannel);
     } else if (activeWorkspace) {
-      const workspaceChannels = ((activeWorkspace?.channels || []) as any[]).filter(
-        (c) => c && typeof c === 'object' && 'name' in c
-      ) as IChannel[];
+      const workspaceChannels = getWorkspaceChannels(activeWorkspace);
 
       const matchedChannel = workspaceChannels.find((c) => c.id === channelId);
       if (matchedChannel && matchedChannel.id !== activeChannel?.id) {
@@ -157,6 +242,8 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setActiveChannel,
       fetchWorkspaces,
       updateWorkspace,
+      removeWorkspace,
+      addChannelToWorkspace,
     }}
     >
       {children}

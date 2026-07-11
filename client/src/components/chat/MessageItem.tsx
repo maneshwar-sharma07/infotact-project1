@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { memo, useState } from 'react';
 import type { IMessage } from '../../types/index.ts';
 import MessageActions from "./MessageActions";
+import MessageAttachments from "./MessageAttachments";
+import MessageReactionBar from "./MessageReactionBar";
+import ReactionPicker from "./ReactionPicker";
 
 interface MessageItemProps {
   message: IMessage;
@@ -8,6 +11,8 @@ interface MessageItemProps {
   onReply: (message: IMessage) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
+  currentUserId?: string;
+  onToggleReaction: (messageId: string, emoji: string) => void;
 }
 
 const getInitials = (name?: string) => {
@@ -27,28 +32,41 @@ const formatTime = (isoString: string) => {
   }
 };
 
-export const MessageItem: React.FC<MessageItemProps> = ({
+export const MessageItem: React.FC<MessageItemProps> = memo(({
   message,
   isOwn,
   onReply,
   onEdit,
   onDelete,
+  currentUserId,
+  onToggleReaction,
 }) => {
+  const [isReactionPickerOpen, setIsReactionPickerOpen] = useState(false);
   const displayName = message.senderName || 'User';
   const initials = getInitials(displayName);
   const timeStr = formatTime(message.timestamp);
+  const hasAttachments = !!message.attachments?.length;
+  const hasContent = !!message.content?.trim();
 
   return (
     <div className={`group relative flex gap-3 items-end w-full mb-4 px-4 ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
-      {/* Avatar circle */}
       <div className="flex-shrink-0 w-8 h-8 rounded-full bg-accent-primary flex items-center justify-center text-white text-xs font-semibold select-none shadow-sm shadow-accent-primary/20">
         {initials}
       </div>
 
-          {/* Message Bubble Container */}
-    <div className={`relative flex flex-col max-w-[70%] ${isOwn ? 'items-end' : 'items-start'}`}>
+    <div
+      className={`relative flex flex-col max-w-[70%] ${isOwn ? 'items-end' : 'items-start'}`}
+      onMouseEnter={() => setIsReactionPickerOpen(true)}
+      onMouseLeave={() => setIsReactionPickerOpen(false)}
+    >
 
-      {/* Message Actions */}
+      <ReactionPicker
+        isOpen={isReactionPickerOpen}
+        onSelect={(emoji) => {
+          onToggleReaction(message.id, emoji);
+          setIsReactionPickerOpen(false);
+        }}
+      />
 
   <MessageActions
     content={message.content}
@@ -57,20 +75,16 @@ export const MessageItem: React.FC<MessageItemProps> = ({
     onDelete={() => onDelete(message.id)}
   />
 
-
-      {/* Sender Name */}
       <span className="text-xs font-medium text-text-muted mb-1 font-heading">
         {displayName}
       </span>
 
-      {/* Message Bubble */}
       <div
         className={`px-4 py-2.5 rounded-[4px] text-sm leading-relaxed font-body shadow-sm break-words w-full
           ${isOwn
             ? 'bg-accent-primary text-white rounded-br-none'
             : 'glass-card border border-white/5 text-[#F1F5F9] rounded-bl-none'
           }`}
-        
       >
         {message.replyTo && (
         <div className="mb-3 rounded-md border-l-2 border-violet-500 bg-black/20 p-2">
@@ -79,22 +93,30 @@ export const MessageItem: React.FC<MessageItemProps> = ({
           </p>
 
           <p className="truncate text-xs text-gray-400">
-            {message.replyTo.content}
+            {message.replyTo.content || "Attachment"}
           </p>
         </div>
       )}
 
+        {hasContent && <p>{message.content}</p>}
 
-        {message.content}
+        {hasAttachments && (
+          <MessageAttachments attachments={message.attachments!} />
+        )}
       </div>
 
-      {/* Timestamp */}
+      <MessageReactionBar
+        reactions={message.reactions}
+        currentUserId={currentUserId}
+        onToggle={(emoji) => onToggleReaction(message.id, emoji)}
+      />
+
       <span className="text-[10px] text-text-muted mt-1 font-mono tracking-wider">
         {timeStr}
       </span>
     </div>
     </div>
   );
-};
+});
 
 export default MessageItem;

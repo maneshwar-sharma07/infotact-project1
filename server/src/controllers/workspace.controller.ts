@@ -1,239 +1,265 @@
-import { Request, Response } from "express";
-import Workspace from "../models/Workspace";
-import Channels from "../models/Channels";
-import crypto from "crypto";
+import { Request, Response } from 'express';
+import Workspace from '../models/Workspace';
+import User from '../models/User';
 
-export const createWorkspace = async (
-    req: Request,
-    res: Response
-): Promise<void> => {
-    try {
-        const { name, description } = req.body;
-
-        if (!name) {
-            res.status(400).json({
-                success: false,
-                message: "Workspace name is required",
-            });
-            return;
-        }
-
-        const userId = req.user!.id;
-
-          const existingWorkspace = await Workspace.findOne({
-            owner:userId,
-            name:name.trim(),
-          });
-
-        if (existingWorkspace) {
-            res.status(409).json({
-                success: false,
-                message: "Workspace with this name already exists",
-            });
-            return;
-        }
-
-        const inviteToken = crypto.randomBytes(16).toString("hex");
-
-        const workspace = await Workspace.create({
-            name: name.trim(),
-            description: description?.trim(),
-            owner: userId,
-            inviteToken,
-            members: [userId],
-            channels: [],
-        });
-
-        // Create a default 'general' channel
-        const defaultChannel = await Channels.create({
-            name: "general",
-            workspace: workspace._id,
-            createdBy: userId,
-        });
-
-        workspace.channels.push(defaultChannel._id as any);
-        await workspace.save();
-
-        // Populate channels before sending response so frontend has it
-        const populatedWorkspace = await Workspace.findById(workspace._id).populate('channels');
-
-        res.status(201).json({
-            success: true,
-            message: "Workspace created successfully",
-            data: populatedWorkspace,
-            inviteLink: `/api/workspaces/join/${workspace.inviteToken}`,
-        });
-    } catch (error) {
-        console.error("Create Workspace Error:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Internal Server Error",
-        });
-    }
-};
-
-export const getWorkspaces = async (
-    req: Request,
-    res: Response
-): Promise<void> => {
-    try {
-        const userId = req.user!.id;
-
-        const workspaces = await Workspace.find({
-            members: userId,
-        }).populate('channels');
-
-        const formattedWorkspaces = workspaces.map((workspace:any) => ({
-             ...workspace.toObject(),
-             memberCount : workspace.members.length,
-             channelCount : workspace.channels.length,
-        }));
-
-        res.status(200).json({
-            success: true,
-            count: workspaces.length,
-            data: formattedWorkspaces,
-        });
-    } catch (error) {
-        console.error("Get Workspaces Error:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Internal Server Error",
-        });
-    }
-};
-
-export const joinWorkspaceByToken = async (
-    req: Request,
-    res: Response
-): Promise<void> => {
-    try {
-        const { token } = req.params;
-
-        const workspace = await Workspace.findOne({
-            inviteToken: token,
-        }).populate('channels');
-
-        if (!workspace) {
-            res.status(404).json({
-                success: false,
-                message: "Invalid invite token",
-            });
-            return;
-        }
-
-        const userId = req.user!.id;
-
-        const alreadyMember = workspace.members.some(
-            (member) => member.toString() === userId
-        );
-
-        if (!alreadyMember) {
-            workspace.members.push(userId as any);
-            await workspace.save();
-        }
-
-        res.status(200).json({
-            success: true,
-            message: "Joined workspace successfully",
-            data: workspace,
-        });
-    } catch (error) {
-        console.error(error);
-
-        res.status(500).json({
-            success: false,
-            message: "Internal Server Error",
-        });
-    }
-};
-
-export const generateInviteLink = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+// ======================
+// Create Workspace
+// ======================
+export const createWorkspace = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { workspaceId } = req.body;
-
-    if (!workspaceId) {
-      res.status(400).json({
-        success: false,
-        message: "Workspace ID is required",
-      });
-      return;
-    }
-
-    const workspace = await Workspace.findById(workspaceId);
-
-    if (!workspace) {
-      res.status(404).json({
-        success: false,
-        message: "Workspace not found",
-      });
-      return;
-    }
-
-    // Check user is member of workspace
+    const { name, description } = req.body;
     const userId = req.user!.id;
 
-    const isMember = workspace.members.some(
-      (member) => member.toString() === userId
-    );
-
-    if (!isMember) {
-      res.status(403).json({
+    if (!name) {
+      res.status(400).json({
         success: false,
-        message: "Forbidden: You are not a member of this workspace",
+        message: 'Workspace name is required',
       });
       return;
     }
 
-    res.status(200).json({
+    const workspace = await Workspace.create({
+      name,
+      description: description || '',
+      createdBy: userId,
+      members: [userId],
+    });
+
+    res.status(201).json({
       success: true,
-      inviteToken: workspace.inviteToken,
-      inviteLink: `/api/workspaces/join/${workspace.inviteToken}`,
+      message: 'Workspace created successfully',
+      data: workspace,
     });
   } catch (error) {
-    console.error("Generate Invite Link Error:", error);
-
+    console.error('Create Workspace Error:', error);
     res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message: 'Internal Server Error',
     });
   }
 };
 
-
-export const getWorkspaceMembers = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+// ======================
+// Get All Workspaces
+// ======================
+export const getWorkspaces = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { workspaceId } = req.params;
+    const userId = req.user!.id;
 
-    const workspace = await Workspace.findById(workspaceId)
-      .populate("members", "name email");
+    const workspaces = await Workspace.find({
+      members: { $in: [userId] },
+    })
+      .populate('createdBy', 'name email')
+      .populate('members', 'name email')
+      .populate('channels')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: workspaces.length,
+      data: workspaces,
+    });
+  } catch (error) {
+    console.error('Get Workspaces Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error',
+    });
+  }
+};
+
+// ======================
+// Get Workspace By ID
+// ======================
+export const getWorkspaceById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const userId = req.user!.id;
+
+    const workspace = await Workspace.findById(id)
+      .populate('createdBy', 'name email')
+      .populate('members', 'name email')
+      .populate('channels');
 
     if (!workspace) {
       res.status(404).json({
         success: false,
-        message: "Workspace not found",
+        message: 'Workspace not found',
+      });
+      return;
+    }
+
+    // Check if user is a member
+    if (!workspace.members.some((m: any) => m._id.toString() === userId)) {
+      res.status(403).json({
+        success: false,
+        message: 'You are not a member of this workspace',
       });
       return;
     }
 
     res.status(200).json({
       success: true,
-      data: workspace.members,
+      data: workspace,
     });
   } catch (error) {
-    console.error(error);
-
+    console.error('Get Workspace Error:', error);
     res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message: 'Internal Server Error',
+    });
+  }
+};
+
+// ======================
+// Update Workspace
+// ======================
+export const updateWorkspace = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { name, description } = req.body;
+    const userId = req.user!.id;
+
+    const workspace = await Workspace.findById(id);
+
+    if (!workspace) {
+      res.status(404).json({
+        success: false,
+        message: 'Workspace not found',
+      });
+      return;
+    }
+
+    // Check if user is the creator
+    if (workspace.createdBy.toString() !== userId) {
+      res.status(403).json({
+        success: false,
+        message: 'Only workspace creator can update',
+      });
+      return;
+    }
+
+    if (name) workspace.name = name;
+    if (description !== undefined) workspace.description = description;
+
+    await workspace.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Workspace updated successfully',
+      data: workspace,
+    });
+  } catch (error) {
+    console.error('Update Workspace Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error',
+    });
+  }
+};
+
+// ======================
+// Delete Workspace
+// ======================
+export const deleteWorkspace = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const userId = req.user!.id;
+
+    const workspace = await Workspace.findById(id);
+
+    if (!workspace) {
+      res.status(404).json({
+        success: false,
+        message: 'Workspace not found',
+      });
+      return;
+    }
+
+    // Check if user is the creator
+    if (workspace.createdBy.toString() !== userId) {
+      res.status(403).json({
+        success: false,
+        message: 'Only workspace creator can delete',
+      });
+      return;
+    }
+
+    await workspace.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: 'Workspace deleted successfully',
+    });
+  } catch (error) {
+    console.error('Delete Workspace Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error',
+    });
+  }
+};
+
+// ======================
+// Add Member to Workspace
+// ======================
+export const addMember = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.body;
+    const currentUserId = req.user!.id;
+
+    const workspace = await Workspace.findById(id);
+
+    if (!workspace) {
+      res.status(404).json({
+        success: false,
+        message: 'Workspace not found',
+      });
+      return;
+    }
+
+    // Check if current user is creator
+    if (workspace.createdBy.toString() !== currentUserId) {
+      res.status(403).json({
+        success: false,
+        message: 'Only workspace creator can add members',
+      });
+      return;
+    }
+
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+      return;
+    }
+
+    // Check if already a member
+    if (workspace.members.some((m: any) => m.toString() === userId)) {
+      res.status(400).json({
+        success: false,
+        message: 'User is already a member',
+      });
+      return;
+    }
+
+    workspace.members.push(userId);
+    await workspace.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Member added successfully',
+      data: workspace,
+    });
+  } catch (error) {
+    console.error('Add Member Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error',
     });
   }
 };

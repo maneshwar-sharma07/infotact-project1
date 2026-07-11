@@ -33,29 +33,26 @@ const seed = async () => {
 
     // 2. Generate hashed password
     const saltRounds = 10;
-    const passwordHash = await bcrypt.hash('password123', saltRounds);
+    const password = await bcrypt.hash('password123', saltRounds);
 
     // 3. Create 3 test users (1 admin, 2 members)
     console.log('Creating users...');
     const adminUser = await User.create({
       name: 'System Admin',
       email: 'admin@slackclone.com',
-      passwordHash,
-      avatarUrl: '',
+      password,
     });
 
     const member1 = await User.create({
       name: 'Jay Naik',
       email: 'jay@infotact.com',
-      passwordHash,
-      avatarUrl: '',
+      password,
     });
 
     const member2 = await User.create({
       name: 'Dinesh Kumar',
       email: 'dinesh@infotact.com',
-      passwordHash,
-      avatarUrl: '',
+      password,
     });
 
     console.log(`Created users: ${adminUser.email}, ${member1.email}, ${member2.email}`);
@@ -65,19 +62,17 @@ const seed = async () => {
     const workspace1 = await Workspace.create({
       name: 'Infotact Engineering',
       description: 'Primary workspace for the engineering team.',
-      owner: adminUser._id,
+      createdBy: adminUser._id,
       members: [adminUser._id, member1._id, member2._id],
       channels: [],
-      inviteToken: 'infotact-eng-invite-token-abc123xyz',
     });
 
     const workspace2 = await Workspace.create({
       name: 'Infotact Marketing',
       description: 'Primary workspace for marketing campaigns.',
-      owner: adminUser._id,
+      createdBy: adminUser._id,
       members: [adminUser._id, member1._id],
       channels: [],
-      inviteToken: 'infotact-mkt-invite-token-def456uvw',
     });
 
     console.log(`Created workspaces: ${workspace1.name}, ${workspace2.name}`);
@@ -117,10 +112,10 @@ const seed = async () => {
     });
 
     // Link channels to workspaces
-    workspace1.channels = [w1ChannelGeneral._id, w1ChannelDev._id, w1ChannelRandom._id];
+    workspace1.channels = [w1ChannelGeneral._id, w1ChannelDev._id, w1ChannelRandom._id] as mongoose.Types.ObjectId[];
     await workspace1.save();
 
-    workspace2.channels = [w2ChannelGeneral._id, w2ChannelSocial._id];
+    workspace2.channels = [w2ChannelGeneral._id, w2ChannelSocial._id] as mongoose.Types.ObjectId[];
     await workspace2.save();
 
     console.log('Created channels and updated workspaces.');

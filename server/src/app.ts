@@ -1,14 +1,36 @@
 import express from 'express';
-import authRoutes from './routes/auth';
-import workspaceRoutes from './routes/workspace.routes';
-import channelRoutes from './routes/channel.routes';
-import messageRoutes from './routes/message.routes';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import connectDB from './config/db';
+import { errorHandler } from './middleware/errorHandler';
 
-const app =express();
+// Import routes
+import authRouter from './routes/auth';
+import workspacesRouter from './routes/workspaces';
+import channelsRouter from './routes/channels';
+import messagesRouter from './routes/messages';
+
+dotenv.config();
+
+const app = express();
+
+// Connect to MongoDB
+connectDB();
+
+// Middleware
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  credentials: true,
+}));
 app.use(express.json());
-app.use('/api/auth', authRoutes);
-app.use('/api/workspaces', workspaceRoutes);
-app.use('/api/channels', channelRoutes);
-app.use('/api/messages', messageRoutes);
+
+// Routes - Make sure these files exist!
+app.use('/api/auth', authRouter);
+app.use('/api/workspaces', workspacesRouter);
+app.use('/api/channels', channelsRouter);
+app.use('/api/messages', messagesRouter);
+
+// Error Handler
+app.use(errorHandler);
 
 export default app;

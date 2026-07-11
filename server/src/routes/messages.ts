@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+/*import { Router, Request, Response } from "express";
 import mongoose from "mongoose";
 import Message from "../models/Message";
 import Channels from "../models/Channels";
@@ -189,9 +189,7 @@ router.post(
   }
 });
 
-/* -------------------------------------------------------------------------- */
-/*                                EDIT MESSAGE                                */
-/* -------------------------------------------------------------------------- */
+
 
 router.patch("/:messageId", verifyToken, async (req: Request, res: Response) => {
   try {
@@ -241,9 +239,6 @@ router.patch("/:messageId", verifyToken, async (req: Request, res: Response) => 
   }
 });
 
-/* -------------------------------------------------------------------------- */
-/*                               DELETE MESSAGE                               */
-/* -------------------------------------------------------------------------- */
 
 router.delete("/:messageId", verifyToken, async (req: Request, res: Response) => {
   try {
@@ -282,5 +277,27 @@ router.delete("/:messageId", verifyToken, async (req: Request, res: Response) =>
     });
   }
 });
+
+export default router;*/
+
+import { Router } from 'express';
+import {
+  createMessage,
+  getMessages,
+  updateMessage,
+  deleteMessage,
+} from '../controllers/message.controller';
+import { verifyToken } from '../middleware/verifyToken';
+import { validate } from '../middleware/validate';
+import { createMessageValidation } from '../validators/message.validator';
+
+const router = Router();
+
+router.use(verifyToken);
+
+router.get('/', getMessages);
+router.post('/', createMessageValidation, validate, createMessage);
+router.patch('/:id', updateMessage);
+router.delete('/:id', deleteMessage);
 
 export default router;

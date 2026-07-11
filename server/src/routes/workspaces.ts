@@ -1,36 +1,23 @@
-import { Router } from "express";
-
+import { Router } from 'express';
 import {
   createWorkspace,
   getWorkspaces,
-  joinWorkspaceByToken,
-  generateInviteLink,
-  getWorkspaceMembers,
-} from "../controllers/workspace.controller";
-
-import { verifyToken } from "../middleware/verifyToken";
-import { validate } from "../middleware/validate";
-import { createWorkspaceValidation } from "../validators/workspace.validator";
+  getWorkspaceById,
+  updateWorkspace,
+  deleteWorkspace,
+  addMember,
+} from '../controllers/workspace.controller';
+import { verifyToken } from '../middleware/verifyToken';
 
 const router = Router();
 
 router.use(verifyToken);
 
-// Workspace
-router.post(
-  "/",
-  createWorkspaceValidation,
-  validate,
-  createWorkspace
-);
-
-router.get("/", getWorkspaces);
-
-// Invite
-router.post("/invite", generateInviteLink);
-router.post("/join/:token", joinWorkspaceByToken);
-
-// Members
-router.get("/:workspaceId/members", getWorkspaceMembers);
+router.get('/', getWorkspaces);
+router.post('/', createWorkspace);
+router.get('/:id', getWorkspaceById);
+router.patch('/:id', updateWorkspace);
+router.delete('/:id', deleteWorkspace);
+router.post('/:id/members', addMember);
 
 export default router;

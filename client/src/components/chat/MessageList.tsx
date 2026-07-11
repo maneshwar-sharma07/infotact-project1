@@ -8,6 +8,7 @@ interface MessageListProps {
   onReply: (message: IMessage) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
+  onToggleReaction: (messageId: string, emoji: string) => void;
 }
 
 export const MessageList: React.FC<MessageListProps> = ({
@@ -15,6 +16,7 @@ export const MessageList: React.FC<MessageListProps> = ({
   onReply,
   onEdit,
   onDelete,
+  onToggleReaction,
 }) => {
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -23,9 +25,11 @@ export const MessageList: React.FC<MessageListProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const latestMessageId = messages.at(-1)?.id;
+
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [latestMessageId, messages.length]);
 
   if (messages.length === 0) {
     return (
@@ -46,6 +50,8 @@ export const MessageList: React.FC<MessageListProps> = ({
                 onReply={onReply}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                currentUserId={user?.id}
+                onToggleReaction={onToggleReaction}
             />
         ))}
         <div ref={messagesEndRef} />

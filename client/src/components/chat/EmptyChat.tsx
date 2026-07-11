@@ -1,4 +1,3 @@
-import React from "react";
 import { MessageCircle, Users, Sparkles } from "lucide-react";
 
 const EmptyChat = () => {
