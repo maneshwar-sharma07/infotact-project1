@@ -5,6 +5,7 @@ import path from 'path';
 import connectDB from './config/db';
 import { errorHandler } from './middleware/errorHandler';
 
+
 // Import routes
 import authRouter from './routes/auth';
 import workspacesRouter from './routes/workspaces';
