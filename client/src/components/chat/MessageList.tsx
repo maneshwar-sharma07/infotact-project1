@@ -5,14 +5,18 @@ import { useAuth } from '../../hooks/useAuth.ts';
 
 interface MessageListProps {
   messages: IMessage[];
+  onReply: (message: IMessage) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
+  onToggleReaction: (messageId: string, emoji: string) => void;
 }
 
 export const MessageList: React.FC<MessageListProps> = ({
-  messages,
+ messages,
+  onReply,
   onEdit,
   onDelete,
+  onToggleReaction,
 }) => {
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -21,9 +25,11 @@ export const MessageList: React.FC<MessageListProps> = ({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const latestMessageId = messages.at(-1)?.id;
+
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [latestMessageId, messages.length]);
 
   if (messages.length === 0) {
     return (
@@ -37,13 +43,16 @@ export const MessageList: React.FC<MessageListProps> = ({
     <div className="flex-1 overflow-y-auto py-4 scrollbar-thin scrollbar-thumb-white/5 scrollbar-track-transparent">
       <div className="flex flex-col">
         {messages.map((msg) => (
-              <MessageItem
-                  key={msg.id || `${msg.senderId}-${msg.timestamp}`}
-                  message={msg}
-                  isOwn={msg.senderId === user?.id}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-              />
+            <MessageItem
+                key={msg.id || `${msg.senderId}-${msg.timestamp}`}
+                message={msg}
+                isOwn={msg.senderId === user?.id}
+                onReply={onReply}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                currentUserId={user?.id}
+                onToggleReaction={onToggleReaction}
+            />
         ))}
         <div ref={messagesEndRef} />
       </div>

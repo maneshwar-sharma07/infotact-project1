@@ -2,14 +2,14 @@ import { Request, Response } from 'express';
 import Channels from '../models/Channels';
 import Workspace from '../models/Workspace';
 import formatChannelName from '../utils/formatChannelName';
-import { format } from 'path/win32';
 
-export const createChannel = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+// ======================
+// Create Channel
+// ======================
+export const createChannel = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, workspaceId } = req.body;
+    const userId = req.user!.id;
 
     if (!name || !workspaceId) {
       res.status(400).json({
@@ -29,9 +29,11 @@ export const createChannel = async (
       return;
     }
 
-    // Authorization: check if requesting user is a workspace member
-    const userId = req.user!.id;
-    const isMember = workspace.members.some((member) => member.toString() === userId);
+    // Check if user is a workspace member
+    const isMember = workspace.members.some(
+      (member) => member.toString() === userId
+    );
+    
     if (!isMember) {
       res.status(403).json({
         success: false,
@@ -40,10 +42,10 @@ export const createChannel = async (
       return;
     }
 
-   const formattedName = formatChannelName(name); // Clean name format
-   const existingChannel = await Channels.findOne({
-    workspace: workspaceId,
-    name: formattedName,
+    const formattedName = formatChannelName(name);
+    const existingChannel = await Channels.findOne({
+      workspace: workspaceId,
+      name: formattedName,
     });
 
     if (existingChannel) {
@@ -60,7 +62,7 @@ export const createChannel = async (
       createdBy: userId,
     });
 
-    // Logical fix: push channel ID to workspace's channels array and save
+    // Push channel ID to workspace's channels array
     workspace.channels.push(channel._id as any);
     await workspace.save();
 
@@ -71,7 +73,6 @@ export const createChannel = async (
     });
   } catch (error) {
     console.error('Create Channel Error:', error);
-
     res.status(500).json({
       success: false,
       message: 'Internal Server Error',
@@ -79,12 +80,13 @@ export const createChannel = async (
   }
 };
 
-export const getChannels = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+// ======================
+// Get Channels
+// ======================
+export const getChannels = async (req: Request, res: Response): Promise<void> => {
   try {
     const workspaceId = req.query.workspaceId as string;
+    const userId = req.user!.id;
 
     if (!workspaceId) {
       res.status(400).json({
@@ -95,6 +97,7 @@ export const getChannels = async (
     }
 
     const workspace = await Workspace.findById(workspaceId);
+    
     if (!workspace) {
       res.status(404).json({
         success: false,
@@ -103,9 +106,11 @@ export const getChannels = async (
       return;
     }
 
-    // Authorization: check if requesting user is a workspace member
-    const userId = req.user!.id;
-    const isMember = workspace.members.some((member) => member.toString() === userId);
+    // Check if user is a workspace member
+    const isMember = workspace.members.some(
+      (member) => member.toString() === userId
+    );
+    
     if (!isMember) {
       res.status(403).json({
         success: false,
@@ -127,7 +132,61 @@ export const getChannels = async (
     });
   } catch (error) {
     console.error('Get Channels Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error',
+    });
+  }
+};
 
+// ======================
+// Get Channel By ID
+// ======================
+export const getChannelById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const userId = req.user!.id;
+
+    const channel = await Channels.findById(id)
+      .populate('createdBy', 'name email')
+      .populate('workspace', 'name');
+
+    if (!channel) {
+      res.status(404).json({
+        success: false,
+        message: 'Channel not found',
+      });
+      return;
+    }
+
+    // Check if user is a workspace member
+    const workspace = await Workspace.findById(channel.workspace);
+    if (!workspace) {
+      res.status(404).json({
+        success: false,
+        message: 'Workspace not found',
+      });
+      return;
+    }
+
+    const isMember = workspace.members.some(
+      (member) => member.toString() === userId
+    );
+    
+    if (!isMember) {
+      res.status(403).json({
+        success: false,
+        message: 'Forbidden: You are not a member of this workspace',
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: channel,
+    });
+  } catch (error) {
+    console.error('Get Channel Error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal Server Error',

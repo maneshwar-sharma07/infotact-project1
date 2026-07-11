@@ -13,6 +13,11 @@ api.interceptors.request.use(
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    if (config.data instanceof FormData && config.headers) {
+      delete config.headers['Content-Type'];
+    }
+
     return config;
   },
   (error) => {
@@ -32,7 +37,13 @@ api.interceptors.response.use(
       localStorage.removeItem('user');
       
       // Hard redirect to the login page
-      window.location.href = '/login';
+      const currentPath = `${window.location.pathname}${window.location.search}`;
+      const redirectTarget =
+        window.location.pathname.startsWith('/invite/')
+          ? `/login?redirect=${encodeURIComponent(window.location.pathname)}`
+          : '/login';
+
+      window.location.href = currentPath.startsWith('/login') ? '/login' : redirectTarget;
     }
     return Promise.reject(error);
   }

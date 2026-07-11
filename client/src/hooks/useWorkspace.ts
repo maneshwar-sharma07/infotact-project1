@@ -10,6 +10,9 @@ export const useWorkspace = () => {
     setActiveWorkspace: context.setActiveWorkspace,
     setActiveChannel: context.setActiveChannel,
     fetchWorkspaces: context.fetchWorkspaces,
+    updateWorkspace: context.updateWorkspace,
+    removeWorkspace: context.removeWorkspace,
+    addChannelToWorkspace: context.addChannelToWorkspace,
   };
 };
 

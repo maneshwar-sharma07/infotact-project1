@@ -2,14 +2,14 @@
 @import "tailwindcss";
 
 :root {
-  --background-void: #0A0A0F;
-  --surface-card: #111118;
-  --accent-primary: #7C3AED;
+  --background-void: #08090d;
+  --surface-card: #11131a;
+  --accent-primary: #8b5cf6;
   --accent-secondary: #06B6D4;
   --success-online: #10B981;
   --text-primary: #F1F5F9;
   --text-muted: #64748B;
-  --border-color: #1E293B;
+  --border-color: #242735;
 
   --font-heading: 'Syne', sans-serif;
   --font-body: 'DM Sans', sans-serif;
@@ -66,6 +66,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
+  overflow: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -96,4 +97,70 @@ code, pre {
   outline: none;
   border-color: var(--accent-primary);
   box-shadow: var(--focus-glow);
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: none;
+}
+
+::selection {
+  background: rgba(139, 92, 246, 0.32);
+  color: #fff;
+}
+
+.app-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.18) transparent;
+}
+
+.app-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.app-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.app-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.18);
+  border-radius: 999px;
+}
+
+.app-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.3);
+}
+
+@media (max-width: 1120px) {
+  .members-panel {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .workspace-sidebar {
+    width: 64px;
+  }
+
+  .channel-sidebar {
+    width: 210px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

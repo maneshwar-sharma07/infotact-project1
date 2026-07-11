@@ -7,7 +7,7 @@ import MembersPanel from '../components/workspace/MembersPanel.tsx';
 
 export const AppPageContent: React.FC = () => {
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#0A0A0F] font-body text-[#F1F5F9]">
+    <div className="flex h-dvh w-full min-w-[620px] overflow-hidden bg-[#08090d] font-body text-[#F1F5F9]">
       {/* 1. Workspace Sidebar (72px) */}
       <WorkspaceSidebar />
 

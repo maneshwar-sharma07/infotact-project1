@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Mail, Lock, LogIn } from 'lucide-react';
 import Input from '../components/ui/Input.tsx';
 import Button from '../components/ui/Button.tsx';
@@ -14,6 +14,13 @@ const LoginPage = () => {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const redirectTo = new URLSearchParams(location.search).get('redirect');
+  const safeRedirect =
+    redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//')
+      ? redirectTo
+      : '/app/default/general';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +42,7 @@ const LoginPage = () => {
       const { token, user } = response.data;
 
       login(token, user);
-      navigate('/app/default/general');
+      navigate(safeRedirect, { replace: true });
     } catch (err: any) {
       console.error(err);
 

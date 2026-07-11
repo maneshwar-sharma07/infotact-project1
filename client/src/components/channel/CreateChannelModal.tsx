@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X } from "lucide-react";
+import { CheckCircle2, Loader2, X } from "lucide-react";
 import api from "../../services/api.ts";
 import { useWorkspace } from "../../hooks/useWorkspace.ts";
 
@@ -12,11 +12,12 @@ const CreateChannelModal: React.FC<Props> = ({
   isOpen,
   onClose,
 }) => {
-  const { activeWorkspace, fetchWorkspaces } = useWorkspace();
+  const { activeWorkspace, addChannelToWorkspace } = useWorkspace();
 
   const [channelName, setChannelName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   if (!isOpen) return null;
 
@@ -34,29 +35,35 @@ const CreateChannelModal: React.FC<Props> = ({
     try {
       setLoading(true);
       setError("");
+      setSuccess("");
 
-      await api.post("/channels", {
+      const response = await api.post("/channels", {
         name: channelName.trim(),
         workspaceId: activeWorkspace.id,
       });
 
-      await fetchWorkspaces();
+      const createdChannel = response.data?.data || response.data;
+      addChannelToWorkspace(activeWorkspace.id, createdChannel);
 
       setChannelName("");
+      setSuccess("Channel created");
 
-      onClose();
-    } catch (err) {
+      setTimeout(() => {
+        setSuccess("");
+        onClose();
+      }, 650);
+    } catch (err: any) {
       console.error(err);
-      setError("Failed to create channel");
+      setError(err.response?.data?.message || "Failed to create channel");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50">
 
-      <div className="w-[420px] rounded-2xl bg-[#111118] border border-[#1E293B]">
+      <div className="w-[420px] rounded-2xl bg-[#111118] border border-[#1E293B] shadow-2xl shadow-black/40 animate-in fade-in zoom-in-95 duration-200">
 
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-[#1E293B]">
@@ -67,7 +74,8 @@ const CreateChannelModal: React.FC<Props> = ({
 
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white"
+            disabled={loading}
+            className="rounded-lg p-1 text-gray-400 transition hover:bg-white/10 hover:text-white disabled:opacity-40"
           >
             <X size={22}/>
           </button>
@@ -77,21 +85,38 @@ const CreateChannelModal: React.FC<Props> = ({
         {/* Body */}
         <div className="p-5">
 
-          <label className="text-sm text-gray-400">
+          <label className="text-sm font-medium text-gray-300">
             Channel Name
           </label>
 
           <input
             type="text"
             value={channelName}
-            onChange={(e) => setChannelName(e.target.value)}
+            onChange={(e) => {
+              setChannelName(e.target.value);
+              setError("");
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                handleCreate();
+              }
+            }}
             placeholder="general"
-            className="mt-2 w-full rounded-xl bg-[#0A0A0F] border border-[#2E303A] px-4 py-3 text-white outline-none focus:border-violet-500"
+            disabled={loading}
+            className="mt-2 w-full rounded-xl bg-[#0A0A0F] border border-[#2E303A] px-4 py-3 text-white outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 disabled:opacity-60"
           />
 
           {error && (
-            <p className="mt-3 text-sm text-red-500">
+            <p className="mt-3 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-300">
               {error}
+            </p>
+          )}
+
+          {success && (
+            <p className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
+              <CheckCircle2 size={16} />
+              {success}
             </p>
           )}
 
@@ -102,17 +127,19 @@ const CreateChannelModal: React.FC<Props> = ({
 
           <button
             onClick={onClose}
-            className="px-5 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white"
+            disabled={loading}
+            className="px-5 py-2 rounded-lg bg-gray-700 text-white transition hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Cancel
           </button>
 
           <button
             onClick={handleCreate}
-            disabled={loading}
-            className="px-5 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white"
+            disabled={loading || !channelName.trim()}
+            className="flex min-w-[108px] items-center justify-center gap-2 px-5 py-2 rounded-lg bg-violet-600 hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50 text-white shadow-lg shadow-violet-600/20 transition"
           >
-            {loading ? "Creating..." : "Create"}
+            {loading && <Loader2 size={16} className="animate-spin" />}
+            {loading ? "Creating" : "Create"}
           </button>
 
         </div>
