@@ -1,15 +1,20 @@
 import { Server, Socket } from "socket.io";
 
+interface RoomPayload {
+  channelId?: string;
+  workspaceId?: string;
+}
+
+const getRoomId = (data: RoomPayload | string, key: keyof RoomPayload) =>
+  typeof data === "object" ? data[key] : data;
+
 export default function chatHandler(
   _io: Server,
   socket: Socket
 ) {
 
-  socket.on("chat:join", (data: any) => {
-    const channelId =
-      typeof data === "object"
-        ? data.channelId
-        : data;
+  socket.on("chat:join", (data: RoomPayload | string) => {
+    const channelId = getRoomId(data, "channelId");
 
     if (channelId) {
       socket.join(channelId);
@@ -20,11 +25,8 @@ export default function chatHandler(
     }
   });
 
-  socket.on("chat:leave", (data: any) => {
-    const channelId =
-      typeof data === "object"
-        ? data.channelId
-        : data;
+  socket.on("chat:leave", (data: RoomPayload | string) => {
+    const channelId = getRoomId(data, "channelId");
 
     if (channelId) {
       socket.leave(channelId);
@@ -33,6 +35,16 @@ export default function chatHandler(
         `Socket ${socket.id} left ${channelId}`
       );
     }
+  });
+
+  socket.on("workspace:join", (data: RoomPayload | string) => {
+    const workspaceId = getRoomId(data, "workspaceId");
+    if (workspaceId) socket.join(workspaceId);
+  });
+
+  socket.on("workspace:leave", (data: RoomPayload | string) => {
+    const workspaceId = getRoomId(data, "workspaceId");
+    if (workspaceId) socket.leave(workspaceId);
   });
 
 }

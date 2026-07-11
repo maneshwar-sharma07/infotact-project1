@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import connectDB from './config/db';
 import { errorHandler } from './middleware/errorHandler';
 
@@ -23,6 +24,18 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+
+app.use(
+  '/uploads',
+  express.static(path.join(__dirname, '../uploads'), {
+    dotfiles: 'deny',
+    index: false,
+    setHeaders: (res) => {
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Content-Security-Policy', "default-src 'none'");
+    },
+  })
+);
 
 // Routes - Make sure these files exist!
 app.use('/api/auth', authRouter);

@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import toJSON from '../utils/toJSON';
 
 export interface IWorkspace extends Document {
   name: string;
@@ -6,6 +7,7 @@ export interface IWorkspace extends Document {
   createdBy: mongoose.Types.ObjectId;
   members: mongoose.Types.ObjectId[];
   channels: mongoose.Types.ObjectId[];
+  inviteToken?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -34,11 +36,17 @@ const workspaceSchema = new Schema<IWorkspace>(
       type: Schema.Types.ObjectId,
       ref: 'Channels',
     }],
+    inviteToken: {
+      type: String,
+      default: '',
+    },
   },
   {
     timestamps: true,
   }
 );
+
+toJSON(workspaceSchema);
 
 const Workspace = mongoose.model<IWorkspace>('Workspace', workspaceSchema);
 export default Workspace;

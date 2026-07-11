@@ -286,18 +286,38 @@ import {
   getMessages,
   updateMessage,
   deleteMessage,
+  toggleMessageReaction,
 } from '../controllers/message.controller';
 import { verifyToken } from '../middleware/verifyToken';
-import { validate } from '../middleware/validate';
-import { createMessageValidation } from '../validators/message.validator';
+import { uploadAttachments, handleUploadError } from '../middleware/upload';
+import { MAX_FILES_PER_MESSAGE } from '../utils/fileConfig';
 
 const router = Router();
+
+const uploadMiddleware = (
+  req: import("express").Request,
+  res: import("express").Response,
+  next: import("express").NextFunction
+) => {
+  uploadAttachments.array("attachments", MAX_FILES_PER_MESSAGE)(
+    req,
+    res,
+    (err) => {
+      if (err) {
+        handleUploadError(err, req, res, next);
+        return;
+      }
+      next();
+    }
+  );
+};
 
 router.use(verifyToken);
 
 router.get('/', getMessages);
-router.post('/', createMessageValidation, validate, createMessage);
+router.post('/', uploadMiddleware, createMessage);
 router.patch('/:id', updateMessage);
+router.post('/:messageId/reaction', toggleMessageReaction);
 router.delete('/:id', deleteMessage);
 
 export default router;
