@@ -12,6 +12,8 @@ export default function chatHandler(
   _io: Server,
   socket: Socket
 ) {
+  // A private room makes user-targeted notifications reliable across tabs/devices.
+  socket.join(`user:${socket.data.userId}`);
 
   socket.on("chat:join", (data: RoomPayload | string) => {
     const channelId = getRoomId(data, "channelId");

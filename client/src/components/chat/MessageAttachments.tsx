@@ -128,6 +128,18 @@ const MessageAttachments: React.FC<MessageAttachmentsProps> = ({
           );
         }
 
+        if (category === "pdf") {
+          return (
+            <div key={`${file.filename}-${index}`} className="overflow-hidden rounded-2xl border border-rose-400/15 bg-gradient-to-br from-rose-500/10 to-orange-500/5 shadow-lg shadow-black/10">
+              <div className="flex items-center justify-between gap-3 border-b border-white/8 px-3 py-2.5">
+                <div className="flex min-w-0 items-center gap-2 text-sm font-medium text-rose-100"><FileText size={17} className="shrink-0 text-rose-300" /><span className="truncate">{file.originalName}</span></div>
+                {renderDownloadButton(file)}
+              </div>
+              <iframe title={`Preview ${file.originalName}`} src={fileUrl} className="h-56 w-full bg-white" loading="lazy" />
+            </div>
+          );
+        }
+
         if (category === "code") {
           return (
             <div

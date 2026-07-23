@@ -39,6 +39,20 @@ const MembersPanel: React.FC = () => {
   }, [activeWorkspace?.id]);
 
   useEffect(() => {
+    const refreshMembers = ({ workspaceId }: { workspaceId: string }) => {
+      if (workspaceId === activeWorkspace?.id) void fetchMembers();
+    };
+    socket.on("workspace:member-added", refreshMembers);
+    socket.on("workspace:member-left", refreshMembers);
+    socket.on("workspace:member-removed", refreshMembers);
+    return () => {
+      socket.off("workspace:member-added", refreshMembers);
+      socket.off("workspace:member-left", refreshMembers);
+      socket.off("workspace:member-removed", refreshMembers);
+    };
+  }, [activeWorkspace?.id]);
+
+  useEffect(() => {
     const handleOnlineUsers = (onlineUserIds: string[]) => {
       setMembers((prev) =>
         prev.map((member) => {
@@ -103,7 +117,7 @@ const MembersPanel: React.FC = () => {
   };
 
   return (
-    <div id="members-panel" className="w-[250px] h-screen bg-[#07070A] border-l border-[#1E1E2F] flex flex-col p-4">
+    <div id="members-panel" className="hidden h-screen w-[272px] shrink-0 border-l border-white/8 bg-[#0b0b12]/90 p-4 backdrop-blur-xl xl:flex xl:flex-col">
       <div className="mb-5 flex items-center justify-between">
         <div>
           <h3 className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
@@ -160,7 +174,7 @@ const MembersPanel: React.FC = () => {
             return (
               <div
                 key={id}
-                className="group rounded-xl border border-[#1E293B]/70 bg-[#111118] p-3 transition hover:border-violet-500/40 hover:bg-[#181820] hover:shadow-lg hover:shadow-violet-600/5"
+                className="group rounded-2xl border border-white/8 bg-white/[0.025] p-3 transition duration-200 hover:-translate-y-0.5 hover:border-violet-500/40 hover:bg-violet-500/[0.06] hover:shadow-lg hover:shadow-violet-600/5"
               >
                 <div className="flex items-center gap-3">
                   <div className="relative">

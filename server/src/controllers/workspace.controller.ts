@@ -2,11 +2,13 @@ import { Request, Response } from 'express';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import mongoose from 'mongoose';
 import Workspace from '../models/Workspace';
 import User from '../models/User';
 import Channels from '../models/Channels';
 import Message from '../models/Message';
 import { io } from '../socket/socketServer';
+import { createNotification, notifyWorkspaceMembers } from '../services/notification.service';
 
 const uploadsDir = path.join(__dirname, '../../uploads');
 
@@ -511,12 +513,30 @@ export const joinWorkspaceByInviteToken = async (req: Request, res: Response): P
     const isMember = workspace.members.some((member: any) => member.toString() === userId);
 
     if (!isMember) {
-      workspace.members.push(userId as any);
-      await workspace.save();
+      // $addToSet is idempotent and avoids duplicate members under concurrent joins.
+      const updatedWorkspace = await Workspace.findByIdAndUpdate(
+        workspace._id,
+        { $addToSet: { members: userId } },
+        { new: true }
+      ).populate('members', 'name email');
       await User.findByIdAndUpdate(userId, { $addToSet: { workspaces: workspace._id } });
-      io.to(workspace._id.toString()).emit('workspace:member-added', {
+      const member = updatedWorkspace?.members.find((item: any) => (item._id?.toString?.() || item.toString()) === userId);
+      const payload = {
         workspaceId: workspace._id.toString(),
         memberId: userId,
+        member,
+      };
+      if (io) {
+        io.to(workspace._id.toString()).emit('workspace:member-added', payload);
+        io.to(`user:${userId}`).emit('workspace:member-added', payload);
+      }
+      const joiningUser = await User.findById(userId).select('name');
+      await notifyWorkspaceMembers(workspace.members, {
+        actor: userId,
+        type: 'workspace:member-joined',
+        title: 'New workspace member',
+        body: `${joiningUser?.name || 'A user'} joined ${workspace.name}.`,
+        workspace: workspace._id,
       });
     }
 
@@ -597,6 +617,11 @@ export const addMember = async (req: Request, res: Response): Promise<void> => {
     const { userId } = req.body;
     const currentUserId = req.user!.id;
 
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      res.status(400).json({ success: false, message: 'A valid userId is required' });
+      return;
+    }
+
     const workspace = await Workspace.findById(id);
 
     if (!workspace) {
@@ -635,13 +660,29 @@ export const addMember = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    workspace.members.push(userId);
-    await workspace.save();
+    await Promise.all([
+      Workspace.updateOne({ _id: workspace._id }, { $addToSet: { members: user._id } }),
+      User.updateOne({ _id: user._id }, { $addToSet: { workspaces: workspace._id } }),
+    ]);
+    const member = await User.findById(user._id).select('name email');
+    const payload = { workspaceId: workspace._id.toString(), memberId: user._id.toString(), member };
+    if (io) {
+      io.to(workspace._id.toString()).emit('workspace:member-added', payload);
+      io.to(`user:${user._id.toString()}`).emit('workspace:member-added', payload);
+    }
+    await createNotification({
+      recipient: user._id,
+      actor: currentUserId,
+      type: 'workspace:invite',
+      title: 'Workspace invitation',
+      body: `You were added to ${workspace.name}.`,
+      workspace: workspace._id,
+    });
 
     res.status(200).json({
       success: true,
       message: 'Member added successfully',
-      data: workspace,
+      data: { ...payload, workspaceId: workspace._id.toString() },
     });
   } catch (error) {
     console.error('Add Member Error:', error);

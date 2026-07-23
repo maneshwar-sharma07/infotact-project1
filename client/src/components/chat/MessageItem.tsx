@@ -8,6 +8,7 @@ import ReactionPicker from "./ReactionPicker";
 interface MessageItemProps {
   message: IMessage;
   isOwn: boolean;
+  grouped?: boolean;
   onReply: (message: IMessage) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
@@ -35,6 +36,7 @@ const formatTime = (isoString: string) => {
 export const MessageItem: React.FC<MessageItemProps> = memo(({
   message,
   isOwn,
+  grouped = false,
   onReply,
   onEdit,
   onDelete,
@@ -49,9 +51,9 @@ export const MessageItem: React.FC<MessageItemProps> = memo(({
   const hasContent = !!message.content?.trim();
 
   return (
-    <div className={`group relative flex gap-3 items-end w-full mb-4 px-4 ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
-      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-accent-primary flex items-center justify-center text-white text-xs font-semibold select-none shadow-sm shadow-accent-primary/20">
-        {initials}
+    <div className={`group relative flex gap-3 items-end w-full px-5 ${grouped ? 'mb-1 mt-0' : 'mb-3 mt-1'} ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}>
+      <div className={`flex-shrink-0 w-9 ${grouped ? 'h-4' : 'h-9'} rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center text-white text-xs font-bold select-none shadow-lg shadow-violet-600/20 ${grouped ? 'opacity-0' : ''}`}>
+        {!grouped && initials}
       </div>
 
     <div
@@ -75,15 +77,15 @@ export const MessageItem: React.FC<MessageItemProps> = memo(({
     onDelete={() => onDelete(message.id)}
   />
 
-      <span className="text-xs font-medium text-text-muted mb-1 font-heading">
-        {displayName}
-      </span>
+      {!grouped && <span className="mb-1 flex items-baseline gap-2 text-xs font-semibold text-slate-200 font-heading">
+        {displayName}<span className="font-normal text-slate-500">{timeStr}</span>
+      </span>}
 
       <div
-        className={`px-4 py-2.5 rounded-[4px] text-sm leading-relaxed font-body shadow-sm break-words w-full
+        className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed font-body shadow-sm break-words w-full transition-all duration-200 group-hover:shadow-lg group-hover:shadow-violet-950/30
           ${isOwn
-            ? 'bg-accent-primary text-white rounded-br-none'
-            : 'glass-card border border-white/5 text-[#F1F5F9] rounded-bl-none'
+            ? 'bg-gradient-to-br from-violet-600 to-violet-700 text-white rounded-br-md'
+            : 'glass-card border border-white/8 bg-white/[0.035] text-[#F1F5F9] rounded-bl-md group-hover:border-violet-400/20'
           }`}
       >
         {message.replyTo && (
@@ -111,9 +113,7 @@ export const MessageItem: React.FC<MessageItemProps> = memo(({
         onToggle={(emoji) => onToggleReaction(message.id, emoji)}
       />
 
-      <span className="text-[10px] text-text-muted mt-1 font-mono tracking-wider">
-        {timeStr}
-      </span>
+      {grouped && <span className="opacity-0 transition-opacity group-hover:opacity-100 text-[10px] text-text-muted mt-0.5 font-mono tracking-wider">{timeStr}</span>}
     </div>
     </div>
   );

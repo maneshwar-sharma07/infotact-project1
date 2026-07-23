@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import type { IWorkspace, IChannel } from '../types/index.ts';
 import api from '../services/api.ts';
 import { useAuth } from '../hooks/useAuth.ts';
+import { socket } from '../services/socket.ts';
 
 export interface WorkspaceContextType {
   activeWorkspace: IWorkspace | null;
@@ -208,6 +209,25 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setActiveWorkspaceState(null);
       setActiveChannelState(null);
     }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    // Membership events can arrive through the workspace room or the user's
+    // private room. Refetching keeps workspace and member data consistent.
+    const refreshForMembershipChange = () => { void fetchWorkspaces(); };
+    socket.on('workspace:member-added', refreshForMembershipChange);
+    socket.on('workspace:member-left', refreshForMembershipChange);
+    socket.on('workspace:member-removed', refreshForMembershipChange);
+    socket.on('channel:created', refreshForMembershipChange);
+    socket.on('channel:deleted', refreshForMembershipChange);
+    return () => {
+      socket.off('workspace:member-added', refreshForMembershipChange);
+      socket.off('workspace:member-left', refreshForMembershipChange);
+      socket.off('workspace:member-removed', refreshForMembershipChange);
+      socket.off('channel:created', refreshForMembershipChange);
+      socket.off('channel:deleted', refreshForMembershipChange);
+    };
   }, [isAuthenticated]);
 
   // Sync state if URL changes (like browser back/forward buttons)

@@ -27,13 +27,14 @@ const MessageReactionBar = ({
   return (
     <div className="mt-2 flex flex-wrap gap-1.5" aria-label="Message reactions">
       {reactionGroups.map((reaction) => (
+        <div key={reaction.emoji} title={`${reaction.count} ${reaction.count === 1 ? 'person' : 'people'} reacted ${reaction.emoji}`}>
         <ReactionBubble
-          key={reaction.emoji}
           emoji={reaction.emoji}
           count={reaction.count}
           isActive={reaction.reactedByCurrentUser}
           onClick={() => onToggle(reaction.emoji)}
         />
+        </div>
       ))}
     </div>
   );

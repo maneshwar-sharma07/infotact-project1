@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import Channels from '../models/Channels';
 import Workspace from '../models/Workspace';
 import formatChannelName from '../utils/formatChannelName';
+import { io } from '../socket/socketServer';
+import { notifyWorkspaceMembers } from '../services/notification.service';
 
 // ======================
 // Create Channel
@@ -65,6 +67,16 @@ export const createChannel = async (req: Request, res: Response): Promise<void> 
     // Push channel ID to workspace's channels array
     workspace.channels.push(channel._id as any);
     await workspace.save();
+
+    if (io) io.to(workspace._id.toString()).emit('channel:created', { workspaceId: workspace._id.toString(), channel });
+    await notifyWorkspaceMembers(workspace.members, {
+      actor: userId,
+      type: 'channel:created',
+      title: 'Channel created',
+      body: `#${channel.name} was created in ${workspace.name}.`,
+      workspace: workspace._id,
+      channel: channel._id,
+    });
 
     res.status(201).json({
       success: true,
@@ -191,5 +203,31 @@ export const getChannelById = async (req: Request, res: Response): Promise<void>
       success: false,
       message: 'Internal Server Error',
     });
+  }
+};
+
+export const deleteChannel = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const channel = await Channels.findById(id);
+    if (!channel) { res.status(404).json({ success: false, message: 'Channel not found' }); return; }
+    const workspace = await Workspace.findById(channel.workspace);
+    if (!workspace) { res.status(404).json({ success: false, message: 'Workspace not found' }); return; }
+    if (workspace.createdBy.toString() !== req.user!.id) { res.status(403).json({ success: false, message: 'Only the workspace owner can delete channels' }); return; }
+
+    await Channels.deleteOne({ _id: channel._id });
+    await Workspace.updateOne({ _id: workspace._id }, { $pull: { channels: channel._id } });
+    if (io) io.to(workspace._id.toString()).emit('channel:deleted', { workspaceId: workspace._id.toString(), channelId: channel._id.toString() });
+    await notifyWorkspaceMembers(workspace.members, {
+      actor: req.user!.id,
+      type: 'channel:deleted',
+      title: 'Channel deleted',
+      body: `#${channel.name} was deleted from ${workspace.name}.`,
+      workspace: workspace._id,
+    });
+    res.status(200).json({ success: true, message: 'Channel deleted successfully' });
+  } catch (error) {
+    console.error('Delete Channel Error:', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 };

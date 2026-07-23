@@ -77,31 +77,6 @@ const formatMessage = (message: ApiMessage): IMessage => {
   };
 };
 
-const applyReactionToggle = (
-  reactions: IMessageReaction[],
-  userId: string,
-  emoji: string
-): IMessageReaction[] => {
-  return reactions
-    .map((reaction) => {
-      if (reaction.emoji !== emoji) return reaction;
-
-      const hasReacted = reaction.users.includes(userId);
-      return {
-        ...reaction,
-        users: hasReacted
-          ? reaction.users.filter((id) => id !== userId)
-          : [...reaction.users, userId],
-      };
-    })
-    .filter((reaction) => reaction.users.length > 0)
-    .concat(
-      reactions.some((reaction) => reaction.emoji === emoji)
-        ? []
-        : [{ emoji, users: [userId] }]
-    );
-};
-
 const getErrorMessage = (error: unknown) => {
   if (
     typeof error === "object" &&
@@ -185,32 +160,14 @@ export const ChatArea: React.FC = () => {
     if (pendingReactionRequests.current.has(requestKey)) return;
     pendingReactionRequests.current.add(requestKey);
 
-    let previousReactions: IMessageReaction[] | undefined;
-    setMessages((previousMessages) =>
-      previousMessages.map((message) => {
-        if (message.id !== messageId) return message;
-
-        previousReactions = message.reactions;
-        return {
-          ...message,
-          reactions: applyReactionToggle(message.reactions, user.id, emoji),
-        };
-      })
-    );
-
     try {
-      await toggleMessageReaction(messageId, emoji);
+      const response = await toggleMessageReaction(messageId, emoji);
+      const updatedMessage = formatMessage(response.data?.data || response.data);
+      setMessages((previousMessages) =>
+        previousMessages.map((message) => message.id === messageId ? updatedMessage : message)
+      );
     } catch (error) {
       console.error("Toggle reaction failed:", error);
-      if (previousReactions) {
-        setMessages((previousMessages) =>
-          previousMessages.map((message) =>
-            message.id === messageId
-              ? { ...message, reactions: previousReactions! }
-              : message
-          )
-        );
-      }
       showToast(getErrorMessage(error).replace("Failed to send message", "Failed to update reaction"), "error");
     } finally {
       pendingReactionRequests.current.delete(requestKey);
@@ -323,12 +280,29 @@ export const ChatArea: React.FC = () => {
       upsertMessage(message, clientTempId);
     };
 
-    socket.on("chat:message", handleNewMessage);
+    socket.on("message:new", handleNewMessage);
 
     return () => {
-      socket.off("chat:message", handleNewMessage);
+      socket.off("message:new", handleNewMessage);
     };
   }, [socket, channelId, upsertMessage]);
+
+  useEffect(() => {
+    if (!socket || !channelId) return;
+    const handleMessageUpdate = (payload: ApiMessage) => {
+      const nextMessage = formatMessage(payload.message || payload);
+      setMessages((current) => current.map((message) => message.id === nextMessage.id ? nextMessage : message));
+    };
+    const handleMessageDelete = ({ messageId }: { messageId: string }) => {
+      setMessages((current) => current.filter((message) => message.id !== messageId));
+    };
+    socket.on('message:update', handleMessageUpdate);
+    socket.on('message:delete', handleMessageDelete);
+    return () => {
+      socket.off('message:update', handleMessageUpdate);
+      socket.off('message:delete', handleMessageDelete);
+    };
+  }, [socket, channelId]);
 
   useEffect(() => {
     if (!socket || !channelId) return;
@@ -341,10 +315,10 @@ export const ChatArea: React.FC = () => {
       );
     };
 
-    socket.on("chat:reaction", handleReaction);
+    socket.on("message:reaction", handleReaction);
 
     return () => {
-      socket.off("chat:reaction", handleReaction);
+      socket.off("message:reaction", handleReaction);
     };
   }, [socket, channelId]);
 

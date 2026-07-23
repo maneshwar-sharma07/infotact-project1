@@ -11,6 +11,7 @@ import authRouter from './routes/auth';
 import workspacesRouter from './routes/workspaces';
 import channelsRouter from './routes/channels';
 import messagesRouter from './routes/messages';
+import notificationsRouter from './routes/notifications';
 
 dotenv.config();
 
@@ -43,6 +44,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/workspaces', workspacesRouter);
 app.use('/api/channels', channelsRouter);
 app.use('/api/messages', messagesRouter);
+app.use('/api/notifications', notificationsRouter);
 
 // Error Handler
 app.use(errorHandler);
